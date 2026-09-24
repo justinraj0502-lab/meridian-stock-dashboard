@@ -1,0 +1,1260 @@
+/* =========================================================
+   MERIDIAN
+   GLOBAL + SIDEBAR
+   index.css
+   ========================================================= */
+
+
+/* =========================================================
+   GLOBAL RESET
+   ========================================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+
+  background: #070b10;
+
+  color: #edf3f8;
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+::selection {
+  background: rgba(32, 211, 148, 0.22);
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #070b10;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #202d3b;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #304153;
+}
+
+
+/* =========================================================
+   ROOT
+   ========================================================= */
+
+#root {
+  min-height: 100vh;
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.sidebar {
+  position: fixed;
+
+  top: 0;
+  left: 0;
+
+  z-index: 1000;
+
+  width: 270px;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  padding:
+    22px 14px 14px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #0b121a 0%,
+      #080e15 48%,
+      #060b11 100%
+    );
+
+  border-right:
+    1px solid rgba(255, 255, 255, 0.075);
+
+  box-shadow:
+    16px 0 55px rgba(0, 0, 0, 0.35);
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  scrollbar-width: thin;
+}
+
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.brand {
+  width: 100%;
+
+  height: 58px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  padding:
+    0 7px;
+
+  margin-bottom: 20px;
+
+  flex-shrink: 0;
+
+  /*
+    Important:
+    Keep the entire brand inside the sidebar.
+  */
+  overflow: hidden;
+}
+
+.brand-logo {
+  width: 42px;
+  height: 42px;
+
+  flex: 0 0 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #31e7a2,
+      #14ae7d
+    );
+
+  color: #04110b;
+
+  font-size: 19px;
+  font-weight: 950;
+
+  box-shadow:
+    0 8px 25px rgba(32, 211, 148, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.brand-content {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+
+  overflow: hidden;
+}
+
+.brand h1 {
+  width: 100%;
+
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 19px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.35px;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+.brand p {
+  display: flex;
+  align-items: center;
+
+  margin-top: 6px;
+
+  color: #71849a;
+
+  font-size: 7.5px;
+  line-height: 1;
+
+  font-weight: 800;
+
+  letter-spacing: 1px;
+
+  white-space: nowrap;
+}
+
+.brand p span {
+  margin:
+    0 5px;
+
+  color: #20d493;
+
+  font-size: 9px;
+}
+
+
+/* =========================================================
+   MARKET STATUS
+   ========================================================= */
+
+.sidebar-market-status {
+  width: 100%;
+
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+
+  padding:
+    0 11px;
+
+  margin-bottom: 20px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.07);
+
+  border-radius: 10px;
+
+  background:
+    rgba(255, 255, 255, 0.025);
+
+  flex-shrink: 0;
+}
+
+.sidebar-market-icon {
+  width: 25px;
+  height: 25px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-right: 8px;
+
+  border-radius: 7px;
+
+  color: #20d493;
+
+  background:
+    rgba(32, 211, 148, 0.08);
+}
+
+.sidebar-market-info {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  flex: 1;
+
+  min-width: 0;
+}
+
+.sidebar-market-info span {
+  color: #65788e;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 0.8px;
+}
+
+.sidebar-market-info strong {
+  color: #dfe9ef;
+
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.sidebar-live-dot {
+  width: 7px;
+  height: 7px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #20d493;
+
+  box-shadow:
+    0 0 0 4px rgba(32, 211, 148, 0.07),
+    0 0 12px rgba(32, 211, 148, 0.5);
+}
+
+
+/* =========================================================
+   SECTION LABEL
+   ========================================================= */
+
+.sidebar-section-label {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  padding:
+    0 8px;
+
+  margin-bottom: 8px;
+
+  flex-shrink: 0;
+}
+
+.sidebar-section-label span {
+  color: #66798e;
+
+  font-size: 8px;
+
+  font-weight: 850;
+
+  letter-spacing: 1.4px;
+
+  white-space: nowrap;
+}
+
+.sidebar-section-label::after {
+  content: "";
+
+  flex: 1;
+
+  height: 1px;
+
+  margin-left: 10px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.06),
+      transparent
+    );
+}
+
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
+.sidebar-nav {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  flex-shrink: 0;
+}
+
+.sidebar-item {
+  position: relative;
+
+  width: 100%;
+
+  min-height: 46px;
+
+  display: flex;
+  align-items: center;
+
+  padding:
+    0 11px;
+
+  border:
+    1px solid transparent;
+
+  border-radius: 10px;
+
+  color: #8f9fb1;
+
+  background: transparent;
+
+  font-size: 11.5px;
+
+  font-weight: 750;
+
+  transition:
+    color 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+.sidebar-item:hover {
+  color: #f7fafc;
+
+  background:
+    rgba(255, 255, 255, 0.035);
+
+  border-color:
+    rgba(255, 255, 255, 0.045);
+
+  transform: translateX(2px);
+}
+
+.sidebar-item.active {
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(32, 211, 148, 0.115),
+      rgba(32, 211, 148, 0.035)
+    );
+
+  border-color:
+    rgba(32, 211, 148, 0.14);
+}
+
+.sidebar-item.active::before {
+  content: "";
+
+  position: absolute;
+
+  left: -1px;
+
+  top: 9px;
+  bottom: 9px;
+
+  width: 3px;
+
+  border-radius:
+    0 5px 5px 0;
+
+  background: #20d493;
+
+  box-shadow:
+    0 0 13px rgba(32, 211, 148, 0.55);
+}
+
+.sidebar-item-icon {
+  width: 19px;
+  height: 19px;
+
+  flex: 0 0 19px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-right: 11px;
+
+  color: #77899c;
+
+  transition:
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.sidebar-item:hover .sidebar-item-icon {
+  color: #ffffff;
+
+  transform: scale(1.04);
+}
+
+.sidebar-item.active .sidebar-item-icon {
+  color: #35e89f;
+}
+
+.sidebar-item-label {
+  flex: 1;
+
+  min-width: 0;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+.sidebar-item-arrow {
+  flex: 0 0 14px;
+
+  margin-left: 8px;
+
+  color: #52667b;
+
+  transition:
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.sidebar-item:hover .sidebar-item-arrow {
+  color: #8fa2b6;
+
+  transform: translateX(2px);
+}
+
+
+/* =========================================================
+   MARKET PULSE
+   ========================================================= */
+
+.sidebar-market-card {
+  position: relative;
+
+  width: 100%;
+
+  margin-top: auto;
+
+  margin-bottom: 11px;
+
+  padding:
+    13px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.065);
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.045),
+      rgba(255, 255, 255, 0.018)
+    );
+
+  overflow: hidden;
+
+  flex-shrink: 0;
+}
+
+.sidebar-market-card-glow {
+  position: absolute;
+
+  width: 100px;
+  height: 100px;
+
+  top: -55px;
+  right: -35px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(32, 211, 148, 0.12);
+
+  filter: blur(28px);
+
+  pointer-events: none;
+}
+
+.sidebar-market-card-header {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-bottom: 11px;
+}
+
+.sidebar-market-card-icon {
+  width: 24px;
+  height: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 7px;
+
+  color: #20d493;
+
+  background:
+    rgba(32, 211, 148, 0.08);
+}
+
+.sidebar-market-card-header > span {
+  color: #7d90a4;
+
+  font-size: 8px;
+
+  font-weight: 850;
+
+  letter-spacing: 1px;
+}
+
+.sidebar-market-card-value {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.sidebar-market-card-value strong {
+  color: #edf4f7;
+
+  font-size: 12px;
+
+  font-weight: 800;
+}
+
+.sidebar-market-card-value span {
+  color: #60748a;
+
+  font-size: 8px;
+
+  font-weight: 650;
+}
+
+.sidebar-market-card-line {
+  height: 2px;
+
+  margin-top: 12px;
+
+  border-radius: 99px;
+
+  background:
+    rgba(255, 255, 255, 0.04);
+
+  overflow: hidden;
+}
+
+.sidebar-market-card-line span {
+  display: block;
+
+  width: 62%;
+
+  height: 100%;
+
+  border-radius: 99px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #20d493,
+      rgba(32, 211, 148, 0.05)
+    );
+}
+
+
+/* =========================================================
+   ACCOUNT CARD
+   ========================================================= */
+
+.account-card {
+  width: 100%;
+
+  margin-bottom: 10px;
+
+  padding:
+    12px 13px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.065);
+
+  border-radius: 12px;
+
+  background:
+    rgba(255, 255, 255, 0.022);
+
+  flex-shrink: 0;
+}
+
+.account-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 8px;
+}
+
+.account-card-header > span {
+  color: #71849a;
+
+  font-size: 7.5px;
+
+  font-weight: 850;
+
+  letter-spacing: 1px;
+}
+
+.account-status {
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  color: #20d493;
+
+  font-size: 7px;
+
+  font-weight: 850;
+
+  letter-spacing: 0.7px;
+}
+
+.account-status span {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #20d493;
+
+  box-shadow:
+    0 0 8px rgba(32, 211, 148, 0.5);
+}
+
+.account-value {
+  display: block;
+
+  color: #ffffff;
+
+  font-size: 17px;
+
+  font-weight: 850;
+
+  letter-spacing: -0.4px;
+}
+
+.account-growth {
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  margin-top: 5px;
+
+  color: #60748a;
+
+  font-size: 8px;
+
+  font-weight: 650;
+}
+
+.account-growth svg {
+  color: #20d493;
+}
+
+
+/* =========================================================
+   USER CARD
+   ========================================================= */
+
+.sidebar-user-card {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding:
+    9px;
+
+  margin-bottom: 7px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.06);
+
+  border-radius: 11px;
+
+  background:
+    rgba(255, 255, 255, 0.02);
+
+  flex-shrink: 0;
+}
+
+.sidebar-user-avatar {
+  width: 32px;
+  height: 32px;
+
+  flex: 0 0 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(32, 211, 148, 0.18),
+      rgba(32, 211, 148, 0.055)
+    );
+
+  border:
+    1px solid rgba(32, 211, 148, 0.13);
+
+  color: #42e9a4;
+
+  font-size: 10px;
+
+  font-weight: 850;
+}
+
+.sidebar-user-info {
+  flex: 1;
+
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.sidebar-user-info strong {
+  color: #eaf1f5;
+
+  font-size: 9px;
+
+  font-weight: 800;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-info span {
+  color: #60748a;
+
+  font-size: 7.5px;
+
+  font-weight: 650;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-icon {
+  flex: 0 0 15px;
+
+  color: #52677b;
+}
+
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+.sidebar-logout {
+  width: 100%;
+
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding:
+    0 10px;
+
+  margin-bottom: 8px;
+
+  border:
+    1px solid transparent;
+
+  border-radius: 9px;
+
+  color: #718398;
+
+  background: transparent;
+
+  font-size: 9px;
+
+  font-weight: 750;
+
+  text-align: left;
+
+  transition:
+    color 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.sidebar-logout:hover {
+  color: #ff8585;
+
+  background:
+    rgba(255, 82, 82, 0.055);
+
+  border-color:
+    rgba(255, 82, 82, 0.08);
+}
+
+.sidebar-logout:disabled {
+  opacity: 0.55;
+}
+
+.sidebar-logout-icon {
+  width: 17px;
+  height: 17px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.sidebar-footer {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 6px;
+
+  padding-top: 8px;
+
+  border-top:
+    1px solid rgba(255, 255, 255, 0.045);
+
+  color: #4e6276;
+
+  font-size: 7px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.8px;
+
+  flex-shrink: 0;
+}
+
+.sidebar-footer-line {
+  display: none;
+}
+
+.sidebar-footer small {
+  color: #3e5266;
+
+  font-size: 6.5px;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   MAIN PAGE OFFSET
+   ========================================================= */
+
+.dashboard-main {
+  width: calc(100% - 270px);
+
+  min-height: 100vh;
+
+  margin-left: 270px;
+}
+
+
+/* =========================================================
+   GENERIC PAGE
+   ========================================================= */
+
+.page {
+  min-height: 100vh;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1100px) and (min-width: 701px) {
+
+  .sidebar {
+    width: 240px;
+  }
+
+  .dashboard-main {
+    width: calc(100% - 240px);
+
+    margin-left: 240px;
+  }
+
+  .brand {
+    gap: 9px;
+  }
+
+  .brand-logo {
+    width: 40px;
+    height: 40px;
+
+    flex-basis: 40px;
+  }
+
+  .brand h1 {
+    font-size: 18px;
+  }
+
+  .sidebar-item {
+    font-size: 11px;
+  }
+}
+
+
+/* =========================================================
+   SMALL TABLET
+   ========================================================= */
+
+@media (max-width: 850px) and (min-width: 701px) {
+
+  .sidebar {
+    width: 215px;
+  }
+
+  .dashboard-main {
+    width: calc(100% - 215px);
+
+    margin-left: 215px;
+  }
+
+  .brand {
+    gap: 8px;
+
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  .brand-logo {
+    width: 38px;
+    height: 38px;
+
+    flex-basis: 38px;
+  }
+
+  .brand h1 {
+    font-size: 16px;
+  }
+
+  .brand p {
+    font-size: 7px;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  .sidebar {
+    width: 72px;
+
+    padding:
+      18px 8px 12px;
+
+    overflow-x: hidden;
+
+    align-items: center;
+  }
+
+  .dashboard-main {
+    width: calc(100% - 72px);
+
+    margin-left: 72px;
+  }
+
+  .brand {
+    width: 100%;
+
+    height: 48px;
+
+    justify-content: center;
+
+    padding: 0;
+
+    margin-bottom: 18px;
+  }
+
+  .brand-logo {
+    width: 40px;
+    height: 40px;
+
+    flex-basis: 40px;
+  }
+
+  .brand-content,
+  .sidebar-market-status,
+  .sidebar-section-label,
+  .sidebar-item-label,
+  .sidebar-item-arrow,
+  .sidebar-market-card,
+  .account-card,
+  .sidebar-user-card,
+  .sidebar-logout,
+  .sidebar-footer {
+    display: none;
+  }
+
+  .sidebar-nav {
+    width: 100%;
+  }
+
+  .sidebar-item {
+    justify-content: center;
+
+    width: 100%;
+
+    min-height: 45px;
+
+    padding: 0;
+
+    border-radius: 10px;
+  }
+
+  .sidebar-item-icon {
+    width: 19px;
+    height: 19px;
+
+    flex-basis: 19px;
+
+    margin-right: 0;
+  }
+
+  .sidebar-item.active::before {
+    left: -2px;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 430px) {
+
+  .sidebar {
+    width: 62px;
+
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .dashboard-main {
+    width: calc(100% - 62px);
+
+    margin-left: 62px;
+  }
+
+  .brand-logo {
+    width: 37px;
+    height: 37px;
+
+    flex-basis: 37px;
+
+    border-radius: 10px;
+
+    font-size: 16px;
+  }
+
+  .sidebar-item {
+    min-height: 43px;
+  }
+
+  .sidebar-item-icon {
+    width: 18px;
+    height: 18px;
+
+    flex-basis: 18px;
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
+  }
+}

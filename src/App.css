@@ -1,0 +1,869 @@
+/* =========================================================
+   MERIDIAN — PREMIUM APPLICATION SYSTEM
+   ========================================================= */
+
+:root {
+  --meridian-gold: #f5b91b;
+  --meridian-gold-bright: #ffd866;
+  --meridian-green: #20d493;
+  --meridian-red: #ff5d6c;
+  --meridian-blue: #5ca9ff;
+
+  --meridian-bg: #03070b;
+  --meridian-surface: #081019;
+  --meridian-surface-2: #0c151f;
+
+  --meridian-border: rgba(255, 255, 255, 0.075);
+  --meridian-border-hover: rgba(255, 255, 255, 0.14);
+
+  --meridian-text: #f5f7fa;
+  --meridian-muted: #7c8b9e;
+
+  --meridian-radius: 16px;
+
+  --meridian-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.38);
+
+  --meridian-ease:
+    cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* =========================================================
+   APPLICATION ROOT
+   ========================================================= */
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+.app {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* =========================================================
+   MAIN APPLICATION SHELL
+   ========================================================= */
+
+.app-layout {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  isolation: isolate;
+}
+
+/* =========================================================
+   GLOBAL AMBIENT LIGHT
+   ========================================================= */
+
+.app-layout::before {
+  content: "";
+
+  position: fixed;
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at 30% -15%,
+      rgba(245, 185, 27, 0.035),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 95% 20%,
+      rgba(32, 212, 147, 0.025),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 50% 110%,
+      rgba(92, 169, 255, 0.025),
+      transparent 35%
+    );
+
+  z-index: -2;
+}
+
+/* =========================================================
+   PREMIUM PAGE TRANSITION
+   ========================================================= */
+
+.app-page {
+  animation:
+    meridianPageEnter 550ms var(--meridian-ease) both;
+}
+
+@keyframes meridianPageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   PREMIUM PAGE GLOW
+   ========================================================= */
+
+.meridian-page-glow {
+  position: fixed;
+
+  width: 520px;
+  height: 520px;
+
+  border-radius: 50%;
+
+  pointer-events: none;
+
+  filter: blur(110px);
+
+  opacity: 0.06;
+
+  z-index: -1;
+
+  animation:
+    meridianGlowMove 14s ease-in-out infinite alternate;
+}
+
+.meridian-page-glow.gold {
+  top: -260px;
+  right: -180px;
+
+  background: var(--meridian-gold);
+}
+
+.meridian-page-glow.green {
+  bottom: -280px;
+  left: 10%;
+
+  background: var(--meridian-green);
+
+  animation-delay: -5s;
+}
+
+@keyframes meridianGlowMove {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(-70px, 80px, 0) scale(1.15);
+  }
+}
+
+/* =========================================================
+   PREMIUM SHARED SURFACE
+   ========================================================= */
+
+.meridian-surface {
+  position: relative;
+
+  border: 1px solid var(--meridian-border);
+
+  border-radius: var(--meridian-radius);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(16, 25, 35, 0.9),
+      rgba(7, 13, 20, 0.94)
+    );
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    var(--meridian-shadow);
+
+  backdrop-filter: blur(24px);
+
+  overflow: hidden;
+
+  transition:
+    border-color 300ms ease,
+    transform 300ms var(--meridian-ease),
+    box-shadow 300ms ease;
+}
+
+.meridian-surface::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 8%;
+  right: 8%;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.16),
+      transparent
+    );
+
+  pointer-events: none;
+}
+
+.meridian-surface:hover {
+  border-color: var(--meridian-border-hover);
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 30px 80px rgba(0, 0, 0, 0.42);
+}
+
+/* =========================================================
+   PREMIUM BUTTON BASE
+   ========================================================= */
+
+.meridian-button {
+  position: relative;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  min-height: 42px;
+
+  padding: 0 17px;
+
+  border: 1px solid var(--meridian-border);
+
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(25, 36, 49, 0.95),
+      rgba(12, 20, 29, 0.95)
+    );
+
+  color: var(--meridian-text);
+
+  font-size: 12px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  overflow: hidden;
+
+  transition:
+    transform 220ms var(--meridian-ease),
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
+}
+
+.meridian-button::after {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  bottom: 0;
+  left: -100%;
+
+  width: 65%;
+
+  background:
+    linear-gradient(
+      100deg,
+      transparent,
+      rgba(255, 255, 255, 0.13),
+      transparent
+    );
+
+  transition: left 550ms ease;
+
+  pointer-events: none;
+}
+
+.meridian-button:hover {
+  transform: translateY(-2px);
+
+  border-color: rgba(255, 255, 255, 0.15);
+
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+.meridian-button:hover::after {
+  left: 140%;
+}
+
+.meridian-button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* =========================================================
+   GOLD BUTTON
+   ========================================================= */
+
+.meridian-button.gold {
+  color: #111;
+
+  border-color: rgba(245, 185, 27, 0.5);
+
+  background:
+    linear-gradient(
+      145deg,
+      var(--meridian-gold-bright),
+      var(--meridian-gold)
+    );
+
+  box-shadow:
+    0 8px 28px rgba(245, 185, 27, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.meridian-button.gold:hover {
+  box-shadow:
+    0 14px 40px rgba(245, 185, 27, 0.23),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* =========================================================
+   GREEN BUTTON
+   ========================================================= */
+
+.meridian-button.green {
+  color: #03120b;
+
+  border-color: rgba(32, 212, 147, 0.4);
+
+  background:
+    linear-gradient(
+      145deg,
+      #48efad,
+      #20d493
+    );
+
+  box-shadow:
+    0 8px 28px rgba(32, 212, 147, 0.12);
+}
+
+.meridian-button.green:hover {
+  box-shadow:
+    0 14px 40px rgba(32, 212, 147, 0.22);
+}
+
+/* =========================================================
+   RED BUTTON
+   ========================================================= */
+
+.meridian-button.red {
+  color: var(--meridian-red);
+
+  border-color: rgba(255, 93, 108, 0.28);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 93, 108, 0.12),
+      rgba(255, 93, 108, 0.035)
+    );
+}
+
+.meridian-button.red:hover {
+  border-color: rgba(255, 93, 108, 0.6);
+
+  box-shadow:
+    0 12px 35px rgba(255, 93, 108, 0.13);
+}
+
+/* =========================================================
+   PREMIUM INPUT
+   ========================================================= */
+
+.meridian-input {
+  width: 100%;
+
+  min-height: 46px;
+
+  padding: 0 14px;
+
+  border: 1px solid var(--meridian-border);
+
+  border-radius: 11px;
+
+  outline: none;
+
+  background:
+    rgba(7, 13, 20, 0.82);
+
+  color: var(--meridian-text);
+
+  font-size: 13px;
+
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
+}
+
+.meridian-input::placeholder {
+  color: #536276;
+}
+
+.meridian-input:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.meridian-input:focus {
+  border-color: rgba(245, 185, 27, 0.42);
+
+  background:
+    rgba(10, 18, 27, 0.96);
+
+  box-shadow:
+    0 0 0 3px rgba(245, 185, 27, 0.06),
+    0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* =========================================================
+   PREMIUM BADGE
+   ========================================================= */
+
+.meridian-badge {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  min-height: 25px;
+
+  padding: 0 9px;
+
+  border-radius: 999px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+
+  background:
+    rgba(255, 255, 255, 0.035);
+
+  color: var(--meridian-muted);
+
+  font-size: 9px;
+  font-weight: 850;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+.meridian-badge.live {
+  color: var(--meridian-green);
+
+  border-color: rgba(32, 212, 147, 0.14);
+
+  background:
+    rgba(32, 212, 147, 0.07);
+}
+
+.meridian-badge.gold {
+  color: var(--meridian-gold);
+
+  border-color: rgba(245, 185, 27, 0.15);
+
+  background:
+    rgba(245, 185, 27, 0.07);
+}
+
+/* =========================================================
+   LIVE INDICATOR
+   ========================================================= */
+
+.meridian-live-dot {
+  width: 6px;
+  height: 6px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: var(--meridian-green);
+
+  box-shadow:
+    0 0 0 4px rgba(32, 212, 147, 0.06),
+    0 0 12px rgba(32, 212, 147, 0.55);
+
+  animation:
+    meridianLivePulse 1.7s ease-in-out infinite;
+}
+
+@keyframes meridianLivePulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.45;
+    transform: scale(0.72);
+  }
+}
+
+/* =========================================================
+   LOADING SHIMMER
+   ========================================================= */
+
+.meridian-skeleton {
+  position: relative;
+
+  overflow: hidden;
+
+  border-radius: 8px;
+
+  background:
+    rgba(255, 255, 255, 0.055);
+}
+
+.meridian-skeleton::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      100deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0.075),
+      transparent 80%
+    );
+
+  transform: translateX(-100%);
+
+  animation:
+    meridianSkeleton 1.5s infinite;
+}
+
+@keyframes meridianSkeleton {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.meridian-empty {
+  min-height: 220px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  padding: 30px;
+}
+
+.meridian-empty-icon {
+  width: 58px;
+  height: 58px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(245, 185, 27, 0.13);
+
+  border-radius: 17px;
+
+  background:
+    rgba(245, 185, 27, 0.055);
+
+  color: var(--meridian-gold);
+
+  box-shadow:
+    0 15px 35px rgba(0, 0, 0, 0.25);
+
+  margin-bottom: 16px;
+}
+
+.meridian-empty h3 {
+  color: var(--meridian-text);
+
+  font-size: 15px;
+
+  font-weight: 800;
+}
+
+.meridian-empty p {
+  max-width: 390px;
+
+  margin-top: 7px;
+
+  color: var(--meridian-muted);
+
+  font-size: 12px;
+
+  line-height: 1.6;
+}
+
+/* =========================================================
+   MODAL SYSTEM
+   ========================================================= */
+
+.meridian-modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 1000;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background:
+    rgba(0, 0, 0, 0.72);
+
+  backdrop-filter: blur(12px);
+
+  animation:
+    meridianOverlayIn 220ms ease both;
+}
+
+@keyframes meridianOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.meridian-modal {
+  position: relative;
+
+  width: min(520px, 100%);
+
+  max-height: calc(100vh - 40px);
+
+  overflow-y: auto;
+
+  padding: 25px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(18, 28, 39, 0.98),
+      rgba(7, 13, 20, 0.99)
+    );
+
+  box-shadow:
+    0 45px 120px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+
+  animation:
+    meridianModalIn 350ms var(--meridian-ease) both;
+}
+
+.meridian-modal::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 12%;
+  right: 12%;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(245, 185, 27, 0.55),
+      transparent
+    );
+}
+
+@keyframes meridianModalIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(18px)
+      scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* =========================================================
+   TOOLTIP
+   ========================================================= */
+
+.meridian-tooltip {
+  position: absolute;
+
+  z-index: 500;
+
+  padding: 7px 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.09);
+
+  border-radius: 8px;
+
+  background:
+    rgba(8, 14, 21, 0.97);
+
+  color: #dce4ed;
+
+  box-shadow:
+    0 15px 35px rgba(0, 0, 0, 0.4);
+
+  font-size: 10px;
+
+  white-space: nowrap;
+
+  pointer-events: none;
+
+  animation:
+    meridianTooltipIn 180ms ease both;
+}
+
+@keyframes meridianTooltipIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   PRICE CHANGE COLORS
+   ========================================================= */
+
+.meridian-positive {
+  color: var(--meridian-green) !important;
+}
+
+.meridian-negative {
+  color: var(--meridian-red) !important;
+}
+
+.meridian-neutral {
+  color: var(--meridian-muted) !important;
+}
+
+/* =========================================================
+   NUMBER TYPOGRAPHY
+   ========================================================= */
+
+.meridian-number {
+  font-variant-numeric: tabular-nums;
+
+  font-feature-settings:
+    "tnum" 1,
+    "zero" 1;
+}
+
+/* =========================================================
+   MOBILE NAV SAFETY
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .app-layout {
+    overflow-x: hidden;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 430px) {
+  .meridian-modal-overlay {
+    padding: 10px;
+  }
+
+  .meridian-modal {
+    padding: 19px;
+
+    border-radius: 16px;
+
+    max-height: calc(100vh - 20px);
+  }
+
+  .meridian-button {
+    min-height: 40px;
+
+    padding: 0 13px;
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--meridian-gold);
+
+  outline-offset: 3px;
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    scroll-behavior: auto !important;
+
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =========================================================
+   END — MERIDIAN APPLICATION SYSTEM
+   ========================================================= */
