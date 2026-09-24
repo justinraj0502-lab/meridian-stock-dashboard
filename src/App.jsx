@@ -1,15 +1,13 @@
-import { useEffect, useState } from "react";
 import {
   BrowserRouter,
   Navigate,
   Route,
   Routes,
-  useLocation,
 } from "react-router-dom";
 
+import Sidebar from "./components/Sidebar";
+
 import Dashboard from "./pages/Dashboard";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
 import Portfolio from "./pages/Portfolio";
 import Screener from "./pages/Screener";
 import Analytics from "./pages/Analytics";
@@ -18,27 +16,29 @@ import Learn from "./pages/Learn";
 import CourseDetails from "./pages/CourseDetails";
 import Lesson from "./pages/Lesson";
 
-function isAuthenticated() {
-  return Boolean(localStorage.getItem("token"));
-}
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 
-/* =====================================================
+import {
+  isAuthenticated,
+} from "./api/api";
+
+import "./App.css";
+
+
+/* =========================================================
    PROTECTED ROUTE
-   ===================================================== */
+========================================================= */
 
-function ProtectedRoute({ children }) {
-  const location = useLocation();
-
+function ProtectedRoute({
+  children,
+}) {
   if (!isAuthenticated()) {
     return (
       <Navigate
         to="/login"
         replace
-        state={{
-          from: location.pathname,
-          message:
-            "Please sign in to access your Meridian workspace.",
-        }}
       />
     );
   }
@@ -46,205 +46,262 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-/* =====================================================
-   APP ROUTES
-   ===================================================== */
 
-function AppRoutes() {
-  const [authVersion, setAuthVersion] = useState(0);
+/* =========================================================
+   PUBLIC ROUTE
+========================================================= */
 
-  useEffect(() => {
-    const handleAuthChange = () => {
-      setAuthVersion((current) => current + 1);
-    };
-
-    window.addEventListener(
-      "meridian-auth-change",
-      handleAuthChange
+function PublicRoute({
+  children,
+}) {
+  if (isAuthenticated()) {
+    return (
+      <Navigate
+        to="/"
+        replace
+      />
     );
+  }
 
-    window.addEventListener(
-      "storage",
-      handleAuthChange
-    );
+  return children;
+}
 
-    return () => {
-      window.removeEventListener(
-        "meridian-auth-change",
-        handleAuthChange
-      );
 
-      window.removeEventListener(
-        "storage",
-        handleAuthChange
-      );
-    };
-  }, []);
+/* =========================================================
+   APP LAYOUT
+   Pages using the main sidebar
+========================================================= */
 
+function AppLayout({
+  children,
+}) {
   return (
-    <Routes key={authVersion}>
+    <div className="app-layout">
 
-      {/* =================================================
-          AUTH ROUTES
-          These pages are always accessible.
-          ================================================= */}
+      <Sidebar />
 
-      <Route
-        path="/login"
-        element={<Login />}
-      />
+      <main className="main-content">
+        {children}
+      </main>
 
-      <Route
-        path="/register"
-        element={<Register />}
-      />
-
-      {/* =================================================
-          ROOT
-          ================================================= */}
-
-      <Route
-        path="/"
-        element={
-          <Navigate
-            to={
-              isAuthenticated()
-                ? "/dashboard"
-                : "/login"
-            }
-            replace
-          />
-        }
-      />
-
-      {/* =================================================
-          DASHBOARD
-          ================================================= */}
-
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* =================================================
-          PORTFOLIO
-          ================================================= */}
-
-      <Route
-        path="/portfolio"
-        element={
-          <ProtectedRoute>
-            <Portfolio />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* =================================================
-          SCREENER
-          ================================================= */}
-
-      <Route
-        path="/screener"
-        element={
-          <ProtectedRoute>
-            <Screener />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* =================================================
-          ANALYTICS
-          ================================================= */}
-
-      <Route
-        path="/analytics"
-        element={
-          <ProtectedRoute>
-            <Analytics />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* =================================================
-          ALERTS
-          ================================================= */}
-
-      <Route
-        path="/alerts"
-        element={
-          <ProtectedRoute>
-            <Alerts />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* =================================================
-          LEARNING
-          ================================================= */}
-
-      <Route
-        path="/learn"
-        element={
-          <ProtectedRoute>
-            <Learn />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/learn/course/:id"
-        element={
-          <ProtectedRoute>
-            <CourseDetails />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/learn/course/:courseId/lesson/:lessonId"
-        element={
-          <ProtectedRoute>
-            <Lesson />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* =================================================
-          UNKNOWN ROUTES
-          ================================================= */}
-
-      <Route
-        path="*"
-        element={
-          <Navigate
-            to={
-              isAuthenticated()
-                ? "/dashboard"
-                : "/login"
-            }
-            replace
-          />
-        }
-      />
-
-    </Routes>
+    </div>
   );
 }
 
-/* =====================================================
+
+/* =========================================================
+   STANDALONE PAGE
+   Full-width page without sidebar
+========================================================= */
+
+function StandalonePage({
+  children,
+}) {
+  return (
+    <main className="standalone-page">
+      {children}
+    </main>
+  );
+}
+
+
+/* =========================================================
    APP
-   ===================================================== */
+========================================================= */
 
 function App() {
   return (
     <BrowserRouter>
-      <AppRoutes />
+
+      <Routes>
+
+        {/* =================================================
+            PUBLIC AUTH ROUTES
+        ================================================= */}
+
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/forgot-password"
+          element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
+          }
+        />
+
+
+        {/* =================================================
+            DASHBOARD
+            SIDEBAR ENABLED
+        ================================================= */}
+
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Dashboard />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =================================================
+            PORTFOLIO
+            SIDEBAR ENABLED
+        ================================================= */}
+
+        <Route
+          path="/portfolio"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Portfolio />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =================================================
+            SCREENER
+            STANDALONE — NO SIDEBAR
+        ================================================= */}
+
+        <Route
+          path="/screener"
+          element={
+            <ProtectedRoute>
+              <StandalonePage>
+                <Screener />
+              </StandalonePage>
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =================================================
+            ANALYTICS
+            STANDALONE — NO SIDEBAR
+        ================================================= */}
+
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <StandalonePage>
+                <Analytics />
+              </StandalonePage>
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =================================================
+            ALERTS
+            STANDALONE — NO SIDEBAR
+        ================================================= */}
+
+        <Route
+          path="/alerts"
+          element={
+            <ProtectedRoute>
+              <StandalonePage>
+                <Alerts />
+              </StandalonePage>
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =================================================
+            LEARN
+            STANDALONE — NO SIDEBAR
+        ================================================= */}
+
+        <Route
+          path="/learn"
+          element={
+            <ProtectedRoute>
+              <StandalonePage>
+                <Learn />
+              </StandalonePage>
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =================================================
+            COURSE DETAILS
+            STANDALONE — NO SIDEBAR
+        ================================================= */}
+
+        <Route
+          path="/learn/course/:id"
+          element={
+            <ProtectedRoute>
+              <StandalonePage>
+                <CourseDetails />
+              </StandalonePage>
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =================================================
+            LESSON
+            STANDALONE — NO SIDEBAR
+        ================================================= */}
+
+        <Route
+          path="/learn/course/:courseId/lesson/:lessonId"
+          element={
+            <ProtectedRoute>
+              <StandalonePage>
+                <Lesson />
+              </StandalonePage>
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =================================================
+            UNKNOWN ROUTES
+        ================================================= */}
+
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/"
+              replace
+            />
+          }
+        />
+
+      </Routes>
+
     </BrowserRouter>
   );
 }
+
 
 export default App;

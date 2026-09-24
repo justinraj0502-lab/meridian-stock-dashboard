@@ -10,1037 +10,1862 @@ import {
   Trash2,
   RefreshCw,
   AlertTriangle,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import { useNavigate } from "react-router-dom";
 
-import { getStocks } from "../api/api";
+import {
+  getAlerts,
+  createAlert,
+  deleteAlert,
+  refreshAlerts,
+  getStocks,
+} from "../api/api";
 
 import "./Alerts.css";
 
-const ALERT_STORAGE_KEY = "meridian-alerts";
+/* =========================================
+   HELPERS
+========================================= */
 
-function normalizeAlert(alert) {
+const normalizeAlert = (alert) => {
+  const target = Number(
+    alert?.target
+  );
+
+  const current = Number(
+    alert?.current
+  );
+
   return {
     ...alert,
-    target: Number(alert.target) || 0,
-    current: Number(alert.current) || 0,
-    triggered: Boolean(alert.triggered),
+
+    target: Number.isFinite(target)
+      ? target
+      : 0,
+
+    current: Number.isFinite(current)
+      ? current
+      : 0,
+
+    triggered:
+      Boolean(
+        alert?.triggered
+      ),
+
+    active:
+      alert?.active !== false,
   };
-}
+};
 
-function checkTriggered(alert, currentPrice) {
-  const current = Number(currentPrice);
+const formatPrice = (value) => {
+  const price = Number(value);
 
-  if (!Number.isFinite(current) || current <= 0) {
-    return alert.triggered;
-  }
-
-  if (alert.type === "Above") {
-    return current >= Number(alert.target);
-  }
-
-  return current <= Number(alert.target);
-}
-
-function getAlertStatus(alert) {
-  return alert.triggered ? "Triggered" : "Watching";
-}
-
-function formatPrice(value) {
-  const number = Number(value);
-
-  if (!Number.isFinite(number)) {
+  if (!Number.isFinite(price)) {
     return "₹0.00";
   }
 
-  return `₹${number.toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
+  return `₹${price.toLocaleString(
+    "en-IN",
+    {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }
+  )}`;
+};
 
-function formatUpdatedTime(value) {
+const formatUpdatedTime = (
+  value
+) => {
   if (!value) {
-    return "Waiting for quote";
+    return "Waiting for data";
   }
 
-  const date = new Date(value);
+  const date =
+    new Date(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return "Last quote unavailable";
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return "Waiting for data";
   }
 
-  return `Updated ${date.toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  })}`;
-}
+  return date.toLocaleString(
+    "en-IN",
+    {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }
+  );
+};
+
+const formatCreatedTime = (
+  value
+) => {
+  if (!value) {
+    return "Recently created";
+  }
+
+  const date =
+    new Date(value);
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return "Recently created";
+  }
+
+  return date.toLocaleDateString(
+    "en-IN",
+    {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }
+  );
+};
+
+/* =========================================
+   PAGE
+========================================= */
 
 function Alerts() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  const [showModal, setShowModal] = useState(false);
-  const [filter, setFilter] = useState("All Alerts");
+  /* =======================================
+     STATE
+  ======================================= */
 
-  const [alerts, setAlerts] = useState(() => {
-    try {
-      const saved = localStorage.getItem(ALERT_STORAGE_KEY);
+  const [
+    alerts,
+    setAlerts,
+  ] = useState([]);
 
-      if (!saved) {
-        return [];
-      }
+  const [
+    stocks,
+    setStocks,
+  ] = useState([]);
 
-      const parsed = JSON.parse(saved);
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
-      if (!Array.isArray(parsed)) {
-        return [];
-      }
+  const [
+    refreshing,
+    setRefreshing,
+  ] = useState(false);
 
-      return parsed.map(normalizeAlert);
-    } catch (error) {
-      console.error("Failed to load alerts:", error);
-      return [];
-    }
-  });
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
 
-  const [stocks, setStocks] = useState([]);
-  const [loadingStocks, setLoadingStocks] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState("");
+  const [
+    deletingId,
+    setDeletingId,
+  ] = useState(null);
 
-  const [form, setForm] = useState({
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  const [
+    actionMessage,
+    setActionMessage,
+  ] = useState("");
+
+  const [
+    filter,
+    setFilter,
+  ] = useState("All");
+
+  const [
+    showModal,
+    setShowModal,
+  ] = useState(false);
+
+  const [
+    form,
+    setForm,
+  ] = useState({
     symbol: "",
-    condition: "Above",
+    type: "Above",
     target: "",
   });
 
-  /* =====================================================
-     FETCH STOCKS
-     ===================================================== */
+  /* =======================================
+     LOAD ALERTS
+  ======================================= */
 
-  const loadStocks = async (showLoader = false) => {
-    try {
-      if (showLoader) {
-        setRefreshing(true);
-      } else {
-        setLoadingStocks(true);
-      }
+  const loadAlerts =
+    useCallback(
+      async ({
+        silent = false,
+      } = {}) => {
+        try {
+          if (!silent) {
+            setLoading(true);
+          }
 
-      setError("");
+          setError("");
 
-      const response = await getStocks();
+          const response =
+            await getAlerts();
 
-      const stockList = Array.isArray(response)
-        ? response
-        : response?.stocks || [];
+          const nextAlerts =
+            Array.isArray(
+              response?.alerts
+            )
+              ? response.alerts.map(
+                  normalizeAlert
+                )
+              : [];
 
-      setStocks(stockList);
-
-      setForm((previous) => {
-        if (previous.symbol) {
-          const stillExists = stockList.some(
-            (stock) => stock.symbol === previous.symbol
+          setAlerts(
+            nextAlerts
+          );
+        } catch (requestError) {
+          console.error(
+            "Load alerts error:",
+            requestError
           );
 
-          if (stillExists) {
-            return previous;
+          if (
+            requestError?.status ===
+            401
+          ) {
+            navigate(
+              "/login"
+            );
+
+            return;
+          }
+
+          setError(
+            requestError?.message ||
+              "Unable to load your alerts."
+          );
+        } finally {
+          if (!silent) {
+            setLoading(false);
           }
         }
+      },
+      [navigate]
+    );
 
-        return {
-          ...previous,
-          symbol: stockList[0]?.symbol || "",
-        };
-      });
+  /* =======================================
+     LOAD STOCKS
+  ======================================= */
 
-      /* Update current prices and trigger status */
+  const loadStocks =
+    useCallback(
+      async () => {
+        try {
+          const response =
+            await getStocks();
 
-      setAlerts((previous) =>
-        previous.map((alert) => {
-          const stock = stockList.find(
-            (item) => item.symbol === alert.symbol
+          const stockList =
+            Array.isArray(
+              response?.stocks
+            )
+              ? response.stocks
+              : Array.isArray(
+                    response
+                  )
+                ? response
+                : [];
+
+          setStocks(
+            stockList
+          );
+        } catch (requestError) {
+          console.error(
+            "Load stocks error:",
+            requestError
+          );
+        }
+      },
+      []
+    );
+
+  /* =======================================
+     REFRESH ALERTS FROM BACKEND
+  ======================================= */
+
+  const refreshLiveAlerts =
+    useCallback(
+      async ({
+        silent = false,
+      } = {}) => {
+        try {
+          if (!silent) {
+            setRefreshing(
+              true
+            );
+          }
+
+          const response =
+            await refreshAlerts();
+
+          const nextAlerts =
+            Array.isArray(
+              response?.alerts
+            )
+              ? response.alerts.map(
+                  normalizeAlert
+                )
+              : [];
+
+          setAlerts(
+            nextAlerts
           );
 
-          if (!stock) {
-            return alert;
+          if (
+            !silent
+          ) {
+            setActionMessage(
+              "Alerts synced with live market data."
+            );
           }
 
-          const current = Number(stock.price);
+          return response;
+        } catch (requestError) {
+          console.error(
+            "Refresh alerts error:",
+            requestError
+          );
 
-          if (!Number.isFinite(current)) {
-            return alert;
+          if (
+            requestError?.status ===
+            401
+          ) {
+            navigate(
+              "/login"
+            );
+
+            return null;
           }
 
-          return normalizeAlert({
-            ...alert,
-            name: stock.name,
-            current,
-            dataSource: stock.dataSource,
-            isLive: stock.isLive,
-            isMarketOpen: stock.isMarketOpen,
-            lastUpdated: stock.lastUpdated,
-            triggered: checkTriggered(
-              alert,
-              current
-            ),
-          });
-        })
-      );
-    } catch (requestError) {
-      console.error(
-        "Failed to load stocks:",
-        requestError
-      );
+          if (
+            !silent
+          ) {
+            setError(
+              requestError?.message ||
+                "Unable to refresh alerts."
+            );
+          }
 
-      setError(
-        requestError?.message ||
-          "Unable to load market data."
-      );
-    } finally {
-      setLoadingStocks(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    loadStocks();
-  }, []);
-
-  /* =====================================================
-     AUTO REFRESH
-     ===================================================== */
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadStocks();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  /* =====================================================
-     SAVE ALERTS
-     ===================================================== */
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        ALERT_STORAGE_KEY,
-        JSON.stringify(alerts)
-      );
-    } catch (storageError) {
-      console.error(
-        "Failed to save alerts:",
-        storageError
-      );
-    }
-  }, [alerts]);
-
-  /* =====================================================
-     COUNTS
-     ===================================================== */
-
-  const watchingCount = alerts.filter(
-    (alert) =>
-      getAlertStatus(alert) === "Watching"
-  ).length;
-
-  const triggeredCount = alerts.filter(
-    (alert) =>
-      getAlertStatus(alert) === "Triggered"
-  ).length;
-
-  /* =====================================================
-     FILTER
-     ===================================================== */
-
-  const filteredAlerts = useMemo(() => {
-    return alerts.filter((alert) => {
-      const status = getAlertStatus(alert);
-
-      if (filter === "Watching") {
-        return status === "Watching";
-      }
-
-      if (filter === "Triggered") {
-        return status === "Triggered";
-      }
-
-      return true;
-    });
-  }, [alerts, filter]);
-
-  /* =====================================================
-     SELECTED STOCK
-     ===================================================== */
-
-  const selectedStock = stocks.find(
-    (stock) => stock.symbol === form.symbol
-  );
-
-  /* =====================================================
-     CREATE ALERT
-     ===================================================== */
-
-  const handleCreateAlert = (event) => {
-    event.preventDefault();
-
-    const target = Number(form.target);
-
-    if (
-      !form.symbol ||
-      !Number.isFinite(target) ||
-      target <= 0
-    ) {
-      return;
-    }
-
-    const stock = stocks.find(
-      (item) => item.symbol === form.symbol
+          return null;
+        } finally {
+          if (!silent) {
+            setRefreshing(
+              false
+            );
+          }
+        }
+      },
+      [navigate]
     );
 
-    if (!stock) {
-      return;
+  /* =======================================
+     INITIAL LOAD
+  ======================================= */
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadInitialData =
+      async () => {
+        try {
+          setLoading(
+            true
+          );
+
+          setError("");
+
+          const [
+            alertsResponse,
+            stocksResponse,
+          ] =
+            await Promise.all([
+              getAlerts(),
+              getStocks(),
+            ]);
+
+          if (cancelled) {
+            return;
+          }
+
+          const nextAlerts =
+            Array.isArray(
+              alertsResponse?.alerts
+            )
+              ? alertsResponse.alerts.map(
+                  normalizeAlert
+                )
+              : [];
+
+          const nextStocks =
+            Array.isArray(
+              stocksResponse?.stocks
+            )
+              ? stocksResponse.stocks
+              : Array.isArray(
+                    stocksResponse
+                  )
+                ? stocksResponse
+                : [];
+
+          setAlerts(
+            nextAlerts
+          );
+
+          setStocks(
+            nextStocks
+          );
+        } catch (requestError) {
+          if (cancelled) {
+            return;
+          }
+
+          console.error(
+            "Initial alerts load error:",
+            requestError
+          );
+
+          if (
+            requestError?.status ===
+            401
+          ) {
+            navigate(
+              "/login"
+            );
+
+            return;
+          }
+
+          setError(
+            requestError?.message ||
+              "Unable to load your alerts."
+          );
+        } finally {
+          if (!cancelled) {
+            setLoading(
+              false
+            );
+          }
+        }
+      };
+
+    loadInitialData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
+
+  /* =======================================
+     AUTO REFRESH
+  ======================================= */
+
+  useEffect(() => {
+    const intervalId =
+      window.setInterval(
+        async () => {
+          await loadStocks();
+          await refreshLiveAlerts({
+            silent: true,
+          });
+        },
+        30000
+      );
+
+    return () => {
+      window.clearInterval(
+        intervalId
+      );
+    };
+  }, [
+    loadStocks,
+    refreshLiveAlerts,
+  ]);
+
+  /* =======================================
+     CLEAR ACTION MESSAGE
+  ======================================= */
+
+  useEffect(() => {
+    if (!actionMessage) {
+      return undefined;
     }
 
-    const current = Number(stock.price);
+    const timeoutId =
+      window.setTimeout(
+        () => {
+          setActionMessage(
+            ""
+          );
+        },
+        3500
+      );
 
-    const newAlert = normalizeAlert({
-      id: `${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2, 8)}`,
-      symbol: stock.symbol,
-      name: stock.name,
-      target,
-      current,
-      type: form.condition,
-      triggered:
-        form.condition === "Above"
-          ? current >= target
-          : current <= target,
-      dataSource: stock.dataSource,
-      isLive: stock.isLive,
-      isMarketOpen: stock.isMarketOpen,
-      lastUpdated: stock.lastUpdated,
-      createdAt: new Date().toISOString(),
-    });
+    return () => {
+      window.clearTimeout(
+        timeoutId
+      );
+    };
+  }, [
+    actionMessage,
+  ]);
 
-    setAlerts((previous) => [
-      ...previous,
-      newAlert,
+  /* =======================================
+     STOCK LOOKUP
+  ======================================= */
+
+  const selectedStock =
+    useMemo(() => {
+      if (!form.symbol) {
+        return null;
+      }
+
+      return (
+        stocks.find(
+          (stock) =>
+            String(
+              stock.symbol
+            ).toUpperCase() ===
+            String(
+              form.symbol
+            ).toUpperCase()
+        ) || null
+      );
+    }, [
+      stocks,
+      form.symbol,
     ]);
 
-    setForm({
-      symbol: stocks[0]?.symbol || "",
-      condition: "Above",
-      target: "",
-    });
+  /* =======================================
+     FILTERED ALERTS
+  ======================================= */
 
-    setShowModal(false);
-  };
+  const filteredAlerts =
+    useMemo(() => {
+      if (
+        filter === "Watching"
+      ) {
+        return alerts.filter(
+          (alert) =>
+            !alert.triggered
+        );
+      }
 
-  /* =====================================================
-     DELETE ALERT
-     ===================================================== */
+      if (
+        filter === "Triggered"
+      ) {
+        return alerts.filter(
+          (alert) =>
+            alert.triggered
+        );
+      }
 
-  const deleteAlert = (id) => {
-    setAlerts((previous) =>
-      previous.filter(
-        (alert) => alert.id !== id
-      )
+      return alerts;
+    }, [
+      alerts,
+      filter,
+    ]);
+
+  /* =======================================
+     STATISTICS
+  ======================================= */
+
+  const stats =
+    useMemo(() => {
+      const triggered =
+        alerts.filter(
+          (alert) =>
+            alert.triggered
+        ).length;
+
+      const watching =
+        alerts.filter(
+          (alert) =>
+            !alert.triggered
+        ).length;
+
+      const live =
+        alerts.filter(
+          (alert) =>
+            alert.isLive
+        ).length;
+
+      return {
+        total:
+          alerts.length,
+
+        watching,
+
+        triggered,
+
+        live,
+      };
+    }, [
+      alerts,
+    ]);
+
+  /* =======================================
+     FORM HANDLERS
+  ======================================= */
+
+  const handleFormChange = (
+    event
+  ) => {
+    const {
+      name,
+      value,
+    } = event.target;
+
+    setForm(
+      (previous) => ({
+        ...previous,
+        [name]:
+          value,
+      })
     );
   };
 
-  /* =====================================================
-     CLOSE MODAL
-     ===================================================== */
+  const openCreateModal =
+    () => {
+      setError("");
 
-  const closeModal = () => {
-    setShowModal(false);
+      setActionMessage(
+        ""
+      );
 
-    setForm({
-      symbol: stocks[0]?.symbol || "",
-      condition: "Above",
-      target: "",
-    });
-  };
+      setForm({
+        symbol:
+          stocks[0]?.symbol ||
+          "",
+        type: "Above",
+        target: "",
+      });
+
+      setShowModal(
+        true
+      );
+    };
+
+  const closeCreateModal =
+    () => {
+      if (submitting) {
+        return;
+      }
+
+      setShowModal(
+        false
+      );
+    };
+
+  /* =======================================
+     CREATE ALERT
+  ======================================= */
+
+  const handleCreateAlert =
+    async (event) => {
+      event.preventDefault();
+
+      if (submitting) {
+        return;
+      }
+
+      const symbol =
+        String(
+          form.symbol || ""
+        )
+          .trim()
+          .toUpperCase();
+
+      const target =
+        Number(
+          form.target
+        );
+
+      if (!symbol) {
+        setError(
+          "Please select a stock."
+        );
+
+        return;
+      }
+
+      if (
+        !Number.isFinite(
+          target
+        ) ||
+        target <= 0
+      ) {
+        setError(
+          "Please enter a valid target price."
+        );
+
+        return;
+      }
+
+      try {
+        setSubmitting(
+          true
+        );
+
+        setError("");
+
+        const response =
+          await createAlert({
+            symbol,
+            type:
+              form.type,
+            target,
+          });
+
+        const createdAlert =
+          response?.alert
+            ? normalizeAlert(
+                response.alert
+              )
+            : null;
+
+        if (
+          createdAlert
+        ) {
+          setAlerts(
+            (previous) => [
+              createdAlert,
+              ...previous,
+            ]
+          );
+        } else {
+          await loadAlerts({
+            silent: true,
+          });
+        }
+
+        setShowModal(
+          false
+        );
+
+        setForm({
+          symbol:
+            stocks[0]?.symbol ||
+            "",
+          type: "Above",
+          target: "",
+        });
+
+        setActionMessage(
+          response?.message ||
+            "Price alert created successfully."
+        );
+      } catch (requestError) {
+        console.error(
+          "Create alert error:",
+          requestError
+        );
+
+        if (
+          requestError?.status ===
+          401
+        ) {
+          navigate(
+            "/login"
+          );
+
+          return;
+        }
+
+        setError(
+          requestError?.message ||
+            "Unable to create price alert."
+        );
+      } finally {
+        setSubmitting(
+          false
+        );
+      }
+    };
+
+  /* =======================================
+     DELETE ALERT
+  ======================================= */
+
+  const handleDeleteAlert =
+    async (alertId) => {
+      if (
+        !alertId ||
+        deletingId
+      ) {
+        return;
+      }
+
+      try {
+        setDeletingId(
+          alertId
+        );
+
+        setError("");
+
+        await deleteAlert(
+          alertId
+        );
+
+        setAlerts(
+          (previous) =>
+            previous.filter(
+              (alert) =>
+                String(
+                  alert._id ||
+                    alert.id
+                ) !==
+                String(
+                  alertId
+                )
+            )
+        );
+
+        setActionMessage(
+          "Alert deleted successfully."
+        );
+      } catch (requestError) {
+        console.error(
+          "Delete alert error:",
+          requestError
+        );
+
+        if (
+          requestError?.status ===
+          401
+        ) {
+          navigate(
+            "/login"
+          );
+
+          return;
+        }
+
+        setError(
+          requestError?.message ||
+            "Unable to delete alert."
+        );
+      } finally {
+        setDeletingId(
+          null
+        );
+      }
+    };
+
+  /* =======================================
+     REFRESH BUTTON
+  ======================================= */
+
+  const handleManualRefresh =
+    async () => {
+      setError("");
+
+      await loadStocks();
+
+      await refreshLiveAlerts();
+    };
+
+  /* =======================================
+     LOADING
+  ======================================= */
+
+  if (loading) {
+    return (
+      <main className="alerts-page">
+        <div className="alerts-shell">
+          <div className="alerts-loading">
+            <div className="alerts-loading-orbit">
+              <div className="alerts-loading-core">
+                <Bell
+                  size={22}
+                />
+              </div>
+            </div>
+
+            <div className="alerts-loading-title">
+              Loading alerts
+            </div>
+
+            <div className="alerts-loading-text">
+              Syncing your watchlist with
+              Meridian market data...
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  /* =======================================
+     RENDER
+  ======================================= */
 
   return (
     <main className="alerts-page">
+      <div className="alerts-bg-orb alerts-bg-orb-one" />
+      <div className="alerts-bg-orb alerts-bg-orb-two" />
 
-      {/* =================================================
-          HEADER
-          ================================================= */}
+      <div className="alerts-shell">
+        {/* =================================
+            TOP BAR
+        ================================= */}
 
-      <div className="alerts-header">
-
-        <div>
-          <p className="page-label">
-            MARKET MONITORING
-          </p>
-
-          <h1>Alerts</h1>
-
-          <p className="page-subtitle">
-            Stay informed when your selected stocks
-            reach the price levels you're watching.
-          </p>
-        </div>
-
-        <div className="alerts-header-actions">
-
+        <header className="alerts-topbar">
           <button
-            className="back-dashboard-btn"
+            type="button"
+            className="alerts-back-button"
             onClick={() =>
-              navigate("/dashboard")
+              navigate("/")
             }
           >
-            <ArrowLeft size={17} />
-            Dashboard
-          </button>
-
-          <button
-            className="refresh-alerts-btn"
-            onClick={() => loadStocks(true)}
-            disabled={refreshing}
-            title="Refresh market prices"
-          >
-            <RefreshCw
-              size={16}
-              className={
-                refreshing
-                  ? "alerts-refresh-spin"
-                  : ""
-              }
+            <ArrowLeft
+              size={17}
             />
+
+            <span>
+              Dashboard
+            </span>
           </button>
 
-          <button
-            className="create-alert-btn"
-            onClick={() => setShowModal(true)}
-            disabled={stocks.length === 0}
-          >
-            <Plus size={18} />
-            Create Alert
-          </button>
+          <div className="alerts-live-status">
+            <span className="alerts-live-dot" />
 
-        </div>
+            <span>
+              Live market alerts
+            </span>
+          </div>
+        </header>
 
-      </div>
+        {/* =================================
+            HEADER
+        ================================= */}
 
-      {/* =================================================
-          ERROR
-          ================================================= */}
-
-      {error && (
-        <div className="alerts-error">
-
-          <AlertTriangle size={17} />
-
+        <section className="alerts-header">
           <div>
-            <strong>
-              Market data unavailable
-            </strong>
+            <div className="alerts-eyebrow">
+              <Bell
+                size={15}
+              />
 
-            <span>{error}</span>
-          </div>
+              PRICE MONITOR
+            </div>
 
-          <button
-            onClick={() => loadStocks(true)}
-          >
-            Retry
-          </button>
-
-        </div>
-      )}
-
-      {/* =================================================
-          OVERVIEW
-          ================================================= */}
-
-      <section className="alert-overview">
-
-        <div className="alert-stat-card">
-
-          <div className="stat-icon">
-            <Bell size={19} />
-          </div>
-
-          <div>
-            <span>Active Alerts</span>
-            <strong>{alerts.length}</strong>
-          </div>
-
-        </div>
-
-        <div className="alert-stat-card">
-
-          <div className="stat-icon">
-            <Clock3 size={19} />
-          </div>
-
-          <div>
-            <span>Watching</span>
-            <strong>{watchingCount}</strong>
-          </div>
-
-        </div>
-
-        <div className="alert-stat-card">
-
-          <div className="stat-icon">
-            <CheckCircle2 size={19} />
-          </div>
-
-          <div>
-            <span>Triggered</span>
-            <strong>{triggeredCount}</strong>
-          </div>
-
-        </div>
-
-      </section>
-
-      {/* =================================================
-          ALERT LIST
-          ================================================= */}
-
-      <section className="alerts-section">
-
-        <div className="section-heading">
-
-          <div>
-            <h2>Your Alerts</h2>
+            <h1>
+              Smart Alerts
+            </h1>
 
             <p>
-              Price levels currently being monitored
-              by Meridian.
+              Monitor your favorite stocks and
+              get notified when the market reaches
+              your target price.
             </p>
           </div>
 
-          <select
-            className="filter-btn"
-            value={filter}
-            onChange={(event) =>
-              setFilter(event.target.value)
-            }
-          >
-            <option value="All Alerts">
-              All Alerts
-            </option>
+          <div className="alerts-header-actions">
+            <button
+              type="button"
+              className={`alerts-refresh-button ${
+                refreshing
+                  ? "refreshing"
+                  : ""
+              }`}
+              onClick={
+                handleManualRefresh
+              }
+              disabled={
+                refreshing
+              }
+            >
+              <RefreshCw
+                size={17}
+              />
 
-            <option value="Watching">
-              Watching
-            </option>
+              <span>
+                {refreshing
+                  ? "Syncing..."
+                  : "Sync Prices"}
+              </span>
+            </button>
 
-            <option value="Triggered">
-              Triggered
-            </option>
-          </select>
+            <button
+              type="button"
+              className="alerts-create-button"
+              onClick={
+                openCreateModal
+              }
+            >
+              <Plus
+                size={18}
+              />
 
-        </div>
+              <span>
+                New Alert
+              </span>
+            </button>
+          </div>
+        </section>
 
-        <div className="alerts-list">
+        {/* =================================
+            ERROR
+        ================================= */}
 
-          {filteredAlerts.length === 0 ? (
+        {error && (
+          <div className="alerts-error">
+            <div className="alerts-error-icon">
+              <AlertTriangle
+                size={18}
+              />
+            </div>
 
-            <div className="empty-alerts">
+            <div className="alerts-error-content">
+              <strong>
+                Something went wrong
+              </strong>
 
-              <div className="empty-alert-icon">
-                <Bell size={30} />
+              <span>
+                {error}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setError("");
+                loadAlerts();
+              }}
+              aria-label="Close error"
+            >
+              <X
+                size={17}
+              />
+            </button>
+          </div>
+        )}
+
+        {/* =================================
+            SUCCESS MESSAGE
+        ================================= */}
+
+        {actionMessage && (
+          <div className="alerts-success">
+            <CheckCircle2
+              size={17}
+            />
+
+            <span>
+              {actionMessage}
+            </span>
+          </div>
+        )}
+
+        {/* =================================
+            OVERVIEW
+        ================================= */}
+
+        <section className="alerts-overview">
+          <div className="alerts-stat-card">
+            <div className="alerts-stat-icon">
+              <Bell
+                size={19}
+              />
+            </div>
+
+            <div>
+              <span className="alerts-stat-label">
+                Total Alerts
+              </span>
+
+              <strong>
+                {stats.total}
+              </strong>
+            </div>
+          </div>
+
+          <div className="alerts-stat-card">
+            <div className="alerts-stat-icon watching">
+              <Clock3
+                size={19}
+              />
+            </div>
+
+            <div>
+              <span className="alerts-stat-label">
+                Watching
+              </span>
+
+              <strong>
+                {stats.watching}
+              </strong>
+            </div>
+          </div>
+
+          <div className="alerts-stat-card">
+            <div className="alerts-stat-icon triggered">
+              <CheckCircle2
+                size={19}
+              />
+            </div>
+
+            <div>
+              <span className="alerts-stat-label">
+                Triggered
+              </span>
+
+              <strong>
+                {stats.triggered}
+              </strong>
+            </div>
+          </div>
+
+          <div className="alerts-stat-card">
+            <div className="alerts-stat-icon live">
+              <Wifi
+                size={19}
+              />
+            </div>
+
+            <div>
+              <span className="alerts-stat-label">
+                Live Feeds
+              </span>
+
+              <strong>
+                {stats.live}
+              </strong>
+            </div>
+          </div>
+        </section>
+
+        {/* =================================
+            MAIN ALERT PANEL
+        ================================= */}
+
+        <section className="alerts-panel">
+          <div className="alerts-panel-header">
+            <div>
+              <div className="alerts-panel-eyebrow">
+                YOUR MONITORS
+              </div>
+
+              <h2>
+                Price Alerts
+              </h2>
+
+              <p>
+                Your alerts are securely stored
+                in your Meridian account.
+              </p>
+            </div>
+
+            <div className="alerts-filter">
+              {[
+                "All",
+                "Watching",
+                "Triggered",
+              ].map(
+                (item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    className={
+                      filter === item
+                        ? "active"
+                        : ""
+                    }
+                    onClick={() =>
+                      setFilter(
+                        item
+                      )
+                    }
+                  >
+                    {item}
+
+                    <span>
+                      {item ===
+                      "All"
+                        ? stats.total
+                        : item ===
+                            "Watching"
+                          ? stats.watching
+                          : stats.triggered}
+                    </span>
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+
+          {/* =================================
+              EMPTY STATE
+          ================================= */}
+
+          {filteredAlerts.length ===
+            0 && (
+            <div className="alerts-empty-state">
+              <div className="alerts-empty-icon">
+                <Bell
+                  size={27}
+                />
+              </div>
+
+              <div className="alerts-empty-badge">
+                {alerts.length ===
+                0
+                  ? "NO ALERTS YET"
+                  : `NO ${filter.toUpperCase()} ALERTS`}
               </div>
 
               <h3>
-                {alerts.length === 0
-                  ? "No alerts yet"
-                  : "No alerts found"}
+                {alerts.length ===
+                0
+                  ? "Start monitoring the market"
+                  : `Nothing in ${filter.toLowerCase()}`}
               </h3>
 
               <p>
-                {alerts.length === 0
-                  ? "Create your first price alert and let Meridian monitor the market for you."
-                  : "There are no alerts matching the selected filter."}
+                {alerts.length ===
+                0
+                  ? "Create a price alert and Meridian will keep watching the live market for you."
+                  : "Try another filter or create a new price alert."}
               </p>
 
-              {stocks.length > 0 && (
-                <button
-                  className="create-alert-btn"
-                  onClick={() =>
-                    setShowModal(true)
-                  }
-                >
-                  <Plus size={17} />
-                  Create Alert
-                </button>
-              )}
+              <button
+                type="button"
+                className="alerts-empty-button"
+                onClick={
+                  openCreateModal
+                }
+              >
+                <Plus
+                  size={17}
+                />
 
+                Create Alert
+              </button>
             </div>
-
-          ) : (
-
-            filteredAlerts.map((alert) => {
-
-              const status =
-                getAlertStatus(alert);
-
-              const isPositive =
-                alert.type === "Above";
-
-              const distance =
-                Number(alert.target) > 0 &&
-                Number(alert.current) > 0
-                  ? Math.abs(
-                      ((Number(alert.target) -
-                        Number(alert.current)) /
-                        Number(alert.current)) *
-                        100
-                    )
-                  : 0;
-
-              return (
-                <div
-                  className={`alert-row ${
-                    status === "Triggered"
-                      ? "alert-row-triggered"
-                      : ""
-                  }`}
-                  key={alert.id}
-                >
-
-                  {/* STOCK */}
-
-                  <div className="alert-stock">
-
-                    <div className="stock-logo">
-                      {alert.symbol
-                        ?.slice(0, 2)
-                        .toUpperCase()}
-                    </div>
-
-                    <div>
-                      <strong>
-                        {alert.symbol}
-                      </strong>
-
-                      <span>
-                        {alert.name ||
-                          "Stock"}
-                      </span>
-                    </div>
-
-                  </div>
-
-                  {/* CONDITION */}
-
-                  <div className="alert-condition">
-
-                    <div
-                      className={`condition-icon ${
-                        isPositive
-                          ? "above"
-                          : "below"
-                      }`}
-                    >
-                      {isPositive ? (
-                        <TrendingUp size={17} />
-                      ) : (
-                        <TrendingDown size={17} />
-                      )}
-                    </div>
-
-                    <div>
-
-                      <span>
-                        Price goes{" "}
-                        {alert.type.toLowerCase()}
-                      </span>
-
-                      <strong>
-                        {formatPrice(
-                          alert.target
-                        )}
-                      </strong>
-
-                    </div>
-
-                  </div>
-
-                  {/* CURRENT PRICE */}
-
-                  <div className="current-price">
-
-                    <span>
-                      Current
-                    </span>
-
-                    <strong>
-                      {formatPrice(
-                        alert.current
-                      )}
-                    </strong>
-
-                    <small>
-                      {distance > 0
-                        ? `${distance.toFixed(
-                            2
-                          )}% away`
-                        : "At target"}
-                    </small>
-
-                  </div>
-
-                  {/* STATUS */}
-
-                  <div
-                    className={`alert-status ${
-                      status === "Triggered"
-                        ? "triggered"
-                        : "watching"
-                    }`}
-                  >
-                    {status}
-                  </div>
-
-                  {/* DATA SOURCE */}
-
-                  <div className="alert-source">
-
-                    <span
-                      className={
-                        alert.isLive
-                          ? "live-dot"
-                          : "seed-dot"
-                      }
-                    />
-
-                    <div>
-                      <strong>
-                        {alert.isLive
-                          ? "Live quote"
-                          : "Last known"}
-                      </strong>
-
-                      <span>
-                        {formatUpdatedTime(
-                          alert.lastUpdated
-                        )}
-                      </span>
-                    </div>
-
-                  </div>
-
-                  {/* DELETE */}
-
-                  <button
-                    className="alert-delete"
-                    onClick={() =>
-                      deleteAlert(alert.id)
-                    }
-                    aria-label={`Delete ${alert.symbol} alert`}
-                    title="Delete alert"
-                  >
-                    <Trash2 size={17} />
-                  </button>
-
-                </div>
-              );
-            })
           )}
 
-        </div>
+          {/* =================================
+              ALERT LIST
+          ================================= */}
 
-      </section>
+          {filteredAlerts.length >
+            0 && (
+            <div className="alerts-list">
+              {filteredAlerts.map(
+                (alert) => {
+                  const alertId =
+                    alert._id ||
+                    alert.id;
 
-      {/* =================================================
-          INFO
-          ================================================= */}
+                  const isAbove =
+                    alert.type ===
+                    "Above";
 
-      <section className="alert-info">
+                  const isDeleting =
+                    deletingId ===
+                    alertId;
 
-        <div className="info-icon">
-          <Bell size={22} />
-        </div>
+                  return (
+                    <article
+                      className={`alert-row ${
+                        alert.triggered
+                          ? "triggered"
+                          : "watching"
+                      }`}
+                      key={
+                        alertId
+                      }
+                    >
+                      {/* STOCK */}
 
-        <div>
-          <h3>
-            Never miss a market move
-          </h3>
+                      <div className="alert-stock">
+                        <div
+                          className={`alert-stock-avatar ${
+                            isAbove
+                              ? "up"
+                              : "down"
+                          }`}
+                        >
+                          {isAbove ? (
+                            <TrendingUp
+                              size={19}
+                            />
+                          ) : (
+                            <TrendingDown
+                              size={19}
+                            />
+                          )}
+                        </div>
 
-          <p>
-            Create price alerts for NSE stocks
-            you're monitoring. Meridian checks
-            the latest available quote and updates
-            your alert status automatically.
-          </p>
-        </div>
+                        <div className="alert-stock-info">
+                          <strong>
+                            {
+                              alert.symbol
+                            }
+                          </strong>
 
-        <button
-          className="secondary-alert-btn"
-          onClick={() => setShowModal(true)}
-          disabled={stocks.length === 0}
-        >
-          <Plus size={17} />
-          Add New Alert
-        </button>
+                          <span>
+                            {
+                              alert.name
+                            }
+                          </span>
 
-      </section>
+                          <small>
+                            Created{" "}
+                            {formatCreatedTime(
+                              alert.createdAt
+                            )}
+                          </small>
+                        </div>
+                      </div>
 
-      {/* =================================================
-          MODAL
-          ================================================= */}
+                      {/* CONDITION */}
+
+                      <div className="alert-condition">
+                        <span>
+                          Condition
+                        </span>
+
+                        <strong
+                          className={
+                            isAbove
+                              ? "above"
+                              : "below"
+                          }
+                        >
+                          {isAbove ? (
+                            <TrendingUp
+                              size={15}
+                            />
+                          ) : (
+                            <TrendingDown
+                              size={15}
+                            />
+                          )}
+
+                          {alert.type}
+                        </strong>
+
+                        <b>
+                          {formatPrice(
+                            alert.target
+                          )}
+                        </b>
+                      </div>
+
+                      {/* CURRENT PRICE */}
+
+                      <div className="alert-current">
+                        <span>
+                          Current Price
+                        </span>
+
+                        <strong>
+                          {formatPrice(
+                            alert.current
+                          )}
+                        </strong>
+
+                        <small>
+                          {formatUpdatedTime(
+                            alert.lastUpdated
+                          )}
+                        </small>
+                      </div>
+
+                      {/* STATUS */}
+
+                      <div className="alert-status">
+                        <span>
+                          Status
+                        </span>
+
+                        <div
+                          className={`alert-status-badge ${
+                            alert.triggered
+                              ? "triggered"
+                              : "watching"
+                          }`}
+                        >
+                          {alert.triggered ? (
+                            <CheckCircle2
+                              size={14}
+                            />
+                          ) : (
+                            <Clock3
+                              size={14}
+                            />
+                          )}
+
+                          {alert.triggered
+                            ? "Triggered"
+                            : "Watching"}
+                        </div>
+
+                        <small>
+                          {alert.triggered &&
+                          alert.triggeredAt
+                            ? `Triggered ${formatUpdatedTime(
+                                alert.triggeredAt
+                              )}`
+                            : alert.active
+                              ? "Monitoring price"
+                              : "Inactive"}
+                        </small>
+                      </div>
+
+                      {/* SOURCE */}
+
+                      <div className="alert-source">
+                        <span>
+                          Data Source
+                        </span>
+
+                        <div>
+                          {alert.isLive ? (
+                            <Wifi
+                              size={14}
+                            />
+                          ) : (
+                            <WifiOff
+                              size={14}
+                            />
+                          )}
+
+                          <strong>
+                            {alert.dataSource ||
+                              "Market data"}
+                          </strong>
+                        </div>
+
+                        <small>
+                          {alert.isMarketOpen
+                            ? "Market open"
+                            : "Market closed"}
+                        </small>
+                      </div>
+
+                      {/* DELETE */}
+
+                      <button
+                        type="button"
+                        className="alert-delete-button"
+                        onClick={() =>
+                          handleDeleteAlert(
+                            alertId
+                          )
+                        }
+                        disabled={
+                          isDeleting
+                        }
+                        aria-label={`Delete ${alert.symbol} alert`}
+                      >
+                        {isDeleting ? (
+                          <RefreshCw
+                            size={17}
+                            className="spinning"
+                          />
+                        ) : (
+                          <Trash2
+                            size={17}
+                          />
+                        )}
+                      </button>
+                    </article>
+                  );
+                }
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* =================================
+            INFO BANNER
+        ================================= */}
+
+        <section className="alerts-info-banner">
+          <div className="alerts-info-icon">
+            <Bell
+              size={19}
+            />
+          </div>
+
+          <div>
+            <strong>
+              How Meridian alerts work
+            </strong>
+
+            <p>
+              Your target conditions are stored
+              securely in MongoDB. Meridian checks
+              them against the latest market prices
+              received from Angel One SmartAPI.
+            </p>
+          </div>
+
+          <div className="alerts-info-live">
+            <span />
+            Auto-sync every 30s
+          </div>
+        </section>
+
+        <footer className="alerts-footer">
+          <span>
+            Meridian Market Intelligence
+          </span>
+
+          <span>
+            Real-time prices • Secure account
+            alerts • Angel One SmartAPI
+          </span>
+        </footer>
+      </div>
+
+      {/* =====================================
+          CREATE ALERT MODAL
+      ===================================== */}
 
       {showModal && (
-
         <div
-          className="alert-modal-overlay"
-          onClick={closeModal}
-        >
-
-          <div
-            className="alert-modal"
-            onClick={(event) =>
-              event.stopPropagation()
+          className="alerts-modal-backdrop"
+          onMouseDown={(event) => {
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              closeCreateModal();
             }
-          >
-
-            <div className="modal-header">
-
+          }}
+        >
+          <div className="alerts-modal">
+            <div className="alerts-modal-header">
               <div>
-                <p className="modal-eyebrow">
-                  MARKET MONITOR
-                </p>
+                <div className="alerts-modal-kicker">
+                  NEW MARKET ALERT
+                </div>
 
                 <h2>
                   Create Price Alert
                 </h2>
 
                 <p>
-                  Choose a stock and set the price
-                  Meridian should monitor.
+                  Choose a stock and target
+                  condition.
                 </p>
               </div>
 
               <button
-                className="modal-close"
-                onClick={closeModal}
-                aria-label="Close"
+                type="button"
+                className="alerts-modal-close"
+                onClick={
+                  closeCreateModal
+                }
+                disabled={
+                  submitting
+                }
               >
-                <X size={20} />
+                <X
+                  size={19}
+                />
               </button>
-
             </div>
 
-            {loadingStocks ? (
+            <form
+              className="alerts-modal-form"
+              onSubmit={
+                handleCreateAlert
+              }
+            >
+              {/* STOCK */}
 
-              <div className="modal-loading">
-
-                <RefreshCw
-                  size={22}
-                  className="alerts-refresh-spin"
-                />
-
+              <label>
                 <span>
-                  Loading market symbols...
+                  Stock
                 </span>
 
-              </div>
+                <select
+                  name="symbol"
+                  value={
+                    form.symbol
+                  }
+                  onChange={
+                    handleFormChange
+                  }
+                  disabled={
+                    submitting
+                  }
+                >
+                  <option value="">
+                    Select a stock
+                  </option>
 
-            ) : stocks.length === 0 ? (
-
-              <div className="modal-empty">
-
-                <AlertTriangle size={24} />
-
-                <strong>
-                  No market symbols available
-                </strong>
-
-                <span>
-                  Meridian could not load stocks
-                  from the backend.
-                </span>
-
-              </div>
-
-            ) : (
-
-              <form
-                onSubmit={handleCreateAlert}
-              >
-
-                {/* STOCK */}
-
-                <div className="form-group">
-
-                  <label>
-                    Stock
-                  </label>
-
-                  <select
-                    value={form.symbol}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        symbol:
-                          event.target.value,
-                      })
-                    }
-                    required
-                  >
-                    {stocks.map((stock) => (
+                  {stocks.map(
+                    (stock) => (
                       <option
-                        key={stock.symbol}
-                        value={stock.symbol}
+                        key={
+                          stock.symbol
+                        }
+                        value={
+                          stock.symbol
+                        }
                       >
-                        {stock.symbol} —{" "}
-                        {stock.name}
+                        {
+                          stock.symbol
+                        }{" "}
+                        —{" "}
+                        {
+                          stock.name
+                        }
                       </option>
-                    ))}
-                  </select>
+                    )
+                  )}
+                </select>
+              </label>
 
-                </div>
+              {/* CONDITION */}
 
-                {/* CONDITION */}
+              <div className="alerts-condition-selector">
+                <span>
+                  Trigger when price goes
+                </span>
 
-                <div className="form-group">
-
-                  <label>
-                    Condition
-                  </label>
-
-                  <select
-                    value={form.condition}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        condition:
-                          event.target.value,
-                      })
+                <div>
+                  <button
+                    type="button"
+                    className={
+                      form.type ===
+                      "Above"
+                        ? "active above"
+                        : ""
+                    }
+                    onClick={() =>
+                      setForm(
+                        (previous) => ({
+                          ...previous,
+                          type: "Above",
+                        })
+                      )
+                    }
+                    disabled={
+                      submitting
                     }
                   >
-                    <option value="Above">
-                      Price goes above
-                    </option>
-
-                    <option value="Below">
-                      Price goes below
-                    </option>
-                  </select>
-
-                </div>
-
-                {/* TARGET */}
-
-                <div className="form-group">
-
-                  <label>
-                    Target Price
-                  </label>
-
-                  <div className="price-input">
-
-                    <span>₹</span>
-
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="1500.00"
-                      value={form.target}
-                      onChange={(event) =>
-                        setForm({
-                          ...form,
-                          target:
-                            event.target.value,
-                        })
-                      }
-                      required
+                    <TrendingUp
+                      size={16}
                     />
 
-                  </div>
-
-                </div>
-
-                {/* PREVIEW */}
-
-                {selectedStock &&
-                  form.target && (
-
-                    <div className="alert-preview">
-
-                      <div className="preview-row">
-
-                        <span>
-                          Current price
-                        </span>
-
-                        <strong>
-                          {formatPrice(
-                            selectedStock.price
-                          )}
-                        </strong>
-
-                      </div>
-
-                      <div className="preview-row">
-
-                        <span>
-                          Target
-                        </span>
-
-                        <strong>
-                          {formatPrice(
-                            form.target
-                          )}
-                        </strong>
-
-                      </div>
-
-                      <small>
-                        This alert will be checked
-                        against the latest Meridian
-                        market quote.
-                      </small>
-
-                    </div>
-                  )}
-
-                {/* ACTIONS */}
-
-                <div className="modal-actions">
+                    Above
+                  </button>
 
                   <button
                     type="button"
-                    className="cancel-btn"
-                    onClick={closeModal}
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="submit-alert-btn"
+                    className={
+                      form.type ===
+                      "Below"
+                        ? "active below"
+                        : ""
+                    }
+                    onClick={() =>
+                      setForm(
+                        (previous) => ({
+                          ...previous,
+                          type: "Below",
+                        })
+                      )
+                    }
                     disabled={
-                      !form.symbol ||
-                      !form.target
+                      submitting
                     }
                   >
-                    <Bell size={16} />
-                    Create Alert
+                    <TrendingDown
+                      size={16}
+                    />
+
+                    Below
                   </button>
-
                 </div>
+              </div>
 
-              </form>
-            )}
+              {/* TARGET */}
 
+              <label>
+                <span>
+                  Target Price
+                </span>
+
+                <div className="alerts-price-input">
+                  <span>
+                    ₹
+                  </span>
+
+                  <input
+                    type="number"
+                    name="target"
+                    value={
+                      form.target
+                    }
+                    onChange={
+                      handleFormChange
+                    }
+                    placeholder="0.00"
+                    min="0.01"
+                    step="0.01"
+                    inputMode="decimal"
+                    disabled={
+                      submitting
+                    }
+                    autoComplete="off"
+                  />
+                </div>
+              </label>
+
+              {/* PREVIEW */}
+
+              {selectedStock && (
+                <div className="alerts-modal-preview">
+                  <div className="alerts-preview-stock">
+                    <div className="alerts-preview-avatar">
+                      {form.type ===
+                      "Above" ? (
+                        <TrendingUp
+                          size={17}
+                        />
+                      ) : (
+                        <TrendingDown
+                          size={17}
+                        />
+                      )}
+                    </div>
+
+                    <div>
+                      <strong>
+                        {
+                          selectedStock.symbol
+                        }
+                      </strong>
+
+                      <span>
+                        {
+                          selectedStock.name
+                        }
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="alerts-preview-price">
+                    <small>
+                      Live price
+                    </small>
+
+                    <strong>
+                      {formatPrice(
+                        selectedStock.price
+                      )}
+                    </strong>
+                  </div>
+
+                  <div className="alerts-preview-source">
+                    <Wifi
+                      size={13}
+                    />
+
+                    {selectedStock.isLive
+                      ? "Live"
+                      : "Market data"}
+                  </div>
+                </div>
+              )}
+
+              {/* SECURITY */}
+
+              <div className="alerts-modal-security">
+                <CheckCircle2
+                  size={15}
+                />
+
+                <span>
+                  This alert will be securely
+                  linked to your Meridian account.
+                </span>
+              </div>
+
+              {/* ACTIONS */}
+
+              <div className="alerts-modal-actions">
+                <button
+                  type="button"
+                  className="alerts-modal-cancel"
+                  onClick={
+                    closeCreateModal
+                  }
+                  disabled={
+                    submitting
+                  }
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="alerts-modal-submit"
+                  disabled={
+                    submitting ||
+                    !form.symbol ||
+                    !form.target
+                  }
+                >
+                  {submitting ? (
+                    <>
+                      <RefreshCw
+                        size={16}
+                        className="spinning"
+                      />
+
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Bell
+                        size={16}
+                      />
+
+                      Create Alert
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
-
         </div>
       )}
-
     </main>
   );
 }

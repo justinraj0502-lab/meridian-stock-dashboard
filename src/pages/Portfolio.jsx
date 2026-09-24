@@ -1,4 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import {
   Activity,
@@ -27,6 +32,7 @@ import Sidebar from "../components/Sidebar";
 
 import {
   getPortfolio,
+  getPortfolioHistory,
   getTransactions,
   getStocks,
   buyStock,
@@ -36,6 +42,12 @@ import {
 import "./Portfolio.css";
 
 const AUTO_REFRESH_INTERVAL = 30000;
+
+const PERFORMANCE_PERIODS = [
+  "3M",
+  "1Y",
+  "2Y",
+];
 
 const formatMoney = (value) => {
   const number = Number(value || 0);
@@ -106,6 +118,28 @@ const formatDateTime = (value) => {
   });
 };
 
+const formatChartDate = (value, period) => {
+  if (!value) return "--";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "--";
+  }
+
+  if (period === "2Y") {
+    return date.toLocaleDateString("en-IN", {
+      month: "short",
+      year: "2-digit",
+    });
+  }
+
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+  });
+};
+
 const getPercent = (value) => {
   const number = Number(value || 0);
 
@@ -117,8 +151,41 @@ const getInitials = (symbol) => {
 
   return symbol
     .replace(":NSE", "")
+    .replace("-EQ", "")
     .slice(0, 2)
     .toUpperCase();
+};
+
+const normalizeSymbol = (symbol) => {
+  return String(symbol || "")
+    .toUpperCase()
+    .replace(":NSE", "")
+    .replace("-EQ", "")
+    .trim();
+};
+
+const getChartPoint = (historyItem) => {
+  return {
+    date:
+      historyItem?.timestamp ||
+      historyItem?.capturedAt ||
+      historyItem?.date,
+
+    value: Number(
+      historyItem?.totalValue ??
+        historyItem?.portfolioValue ??
+        historyItem?.value ??
+        0
+    ),
+
+    invested: Number(
+      historyItem?.totalInvested || 0
+    ),
+
+    profitLoss: Number(
+      historyItem?.totalProfitLoss || 0
+    ),
+  };
 };
 
 function Portfolio() {
@@ -127,6 +194,15 @@ function Portfolio() {
   const [transactions, setTransactions] = useState([]);
   const [stocks, setStocks] = useState([]);
 
+  const [performanceHistory, setPerformanceHistory] =
+    useState([]);
+
+  const [performanceLoading, setPerformanceLoading] =
+    useState(true);
+
+  const [performanceError, setPerformanceError] =
+    useState("");
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -134,168 +210,226 @@ function Portfolio() {
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const [activePeriod, setActivePeriod] = useState("1Y");
-  const [selectedHolding, setSelectedHolding] = useState(null);
+  const [selectedHolding, setSelectedHolding] =
+    useState(null);
 
-  // BUY / SELL
   const [tradeType, setTradeType] = useState(null);
   const [tradeSymbol, setTradeSymbol] = useState("");
-  const [tradeQuantity, setTradeQuantity] = useState("");
-  const [tradeLoading, setTradeLoading] = useState(false);
-  const [tradeMessage, setTradeMessage] = useState("");
-  const [tradeError, setTradeError] = useState("");
+  const [tradeQuantity, setTradeQuantity] =
+    useState("");
+  const [tradeLoading, setTradeLoading] =
+    useState(false);
+  const [tradeMessage, setTradeMessage] =
+    useState("");
+  const [tradeError, setTradeError] =
+    useState("");
 
-  const loadPortfolio = useCallback(async (showLoader = false) => {
-    try {
-      if (showLoader) {
-        setLoading(true);
-      } else {
-        setRefreshing(true);
+  /*
+   * LOAD PORTFOLIO
+   */
+  const loadPortfolio = useCallback(
+    async (showLoader = false) => {
+      try {
+        if (showLoader) {
+          setLoading(true);
+        } else {
+          setRefreshing(true);
+        }
+
+        setError("");
+
+        const [
+          portfolioData,
+          transactionData,
+          stockData,
+        ] = await Promise.all([
+          getPortfolio(),
+          getTransactions(),
+          getStocks(),
+        ]);
+
+        const holdings =
+          portfolioData?.portfolio?.holdings ||
+          portfolioData?.holdings ||
+          [];
+
+        const cashBalance = Number(
+          portfolioData?.balance ??
+            portfolioData?.portfolio?.balance ??
+            0
+        );
+
+        const normalizedTransactions =
+          Array.isArray(transactionData)
+            ? transactionData
+            : Array.isArray(
+                transactionData?.transactions
+              )
+            ? transactionData.transactions
+            : [];
+
+        const normalizedStocks =
+          Array.isArray(stockData)
+            ? stockData
+            : Array.isArray(
+                stockData?.stocks
+              )
+            ? stockData.stocks
+            : [];
+
+        setPortfolio(holdings);
+        setBalance(cashBalance);
+        setTransactions(
+          normalizedTransactions
+        );
+        setStocks(normalizedStocks);
+        setLastUpdated(new Date());
+      } catch (err) {
+        console.error(
+          "Portfolio loading error:",
+          err
+        );
+
+        setError(
+          err?.message ||
+            "Unable to load portfolio. Please login and try again."
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
+    },
+    []
+  );
 
-      setError("");
+  /*
+   * LOAD PORTFOLIO PERFORMANCE HISTORY
+   */
+  const loadPerformanceHistory =
+    useCallback(async () => {
+      try {
+        setPerformanceLoading(true);
+        setPerformanceError("");
 
-      const [
-        portfolioData,
-        transactionData,
-        stockData,
-      ] = await Promise.all([
-        getPortfolio(),
-        getTransactions(),
-        getStocks(),
-      ]);
+        const response =
+          await getPortfolioHistory(
+            activePeriod
+          );
 
-      setPortfolio(
-        portfolioData?.portfolio?.holdings || []
-      );
+        const history =
+          Array.isArray(response)
+            ? response
+            : Array.isArray(
+                response?.history
+              )
+            ? response.history
+            : [];
 
-      setBalance(
-        Number(portfolioData?.balance || 0)
-      );
+        setPerformanceHistory(
+          history.map(getChartPoint)
+        );
+      } catch (err) {
+        console.error(
+          "Portfolio history loading error:",
+          err
+        );
 
-      setTransactions(transactionData || []);
-      setStocks(stockData || []);
-      setLastUpdated(new Date());
-    } catch (err) {
-      console.error("Portfolio loading error:", err);
+        setPerformanceHistory([]);
 
-      setError(
-        err?.message ||
-          "Unable to load portfolio. Please login and try again."
-      );
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+        setPerformanceError(
+          err?.message ||
+            "Unable to load portfolio performance history."
+        );
+      } finally {
+        setPerformanceLoading(false);
+      }
+    }, [activePeriod]);
 
+  /*
+   * INITIAL LOAD
+   */
   useEffect(() => {
     loadPortfolio(true);
   }, [loadPortfolio]);
 
+  /*
+   * PERFORMANCE LOAD
+   */
+  useEffect(() => {
+    loadPerformanceHistory();
+  }, [loadPerformanceHistory]);
+
+  /*
+   * AUTO REFRESH
+   */
   useEffect(() => {
     const interval = setInterval(() => {
       loadPortfolio(false);
+      loadPerformanceHistory();
     }, AUTO_REFRESH_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [loadPortfolio]);
+  }, [
+    loadPortfolio,
+    loadPerformanceHistory,
+  ]);
 
-  const totalValue = useMemo(() => {
-    return portfolio.reduce((total, holding) => {
-      const quantity = Number(
-        holding.quantity ||
-          holding.shares ||
-          0
+  /*
+   * LIVE STOCK LOOKUP
+   */
+  const stockMap = useMemo(() => {
+    const map = new Map();
+
+    stocks.forEach((stock) => {
+      const symbol = normalizeSymbol(
+        stock.symbol ||
+          stock.tradingSymbol
       );
 
-      const currentPrice = Number(
-        holding.currentPrice ||
-          holding.price ||
-          holding.averagePrice ||
-          0
-      );
+      if (!symbol) return;
 
-      return total + quantity * currentPrice;
-    }, 0);
-  }, [portfolio]);
+      map.set(symbol, stock);
+    });
 
-  const totalInvested = useMemo(() => {
-    return portfolio.reduce((total, holding) => {
-      const quantity = Number(
-        holding.quantity ||
-          holding.shares ||
-          0
-      );
+    return map;
+  }, [stocks]);
 
-      const averagePrice = Number(
-        holding.averagePrice ||
-          holding.avgPrice ||
-          holding.buyPrice ||
-          0
-      );
-
-      return total + quantity * averagePrice;
-    }, 0);
-  }, [portfolio]);
-
-  const totalProfitLoss = useMemo(() => {
-    return portfolio.reduce((total, holding) => {
-      const quantity = Number(
-        holding.quantity ||
-          holding.shares ||
-          0
-      );
-
-      const currentPrice = Number(
-        holding.currentPrice ||
-          holding.price ||
-          0
-      );
-
-      const averagePrice = Number(
-        holding.averagePrice ||
-          holding.avgPrice ||
-          holding.buyPrice ||
-          0
-      );
-
-      return (
-        total +
-        (currentPrice - averagePrice) *
-          quantity
-      );
-    }, 0);
-  }, [portfolio]);
-
-  const profitPercent = useMemo(() => {
-    if (!totalInvested) return 0;
-
-    return (
-      (totalProfitLoss / totalInvested) *
-      100
-    );
-  }, [totalProfitLoss, totalInvested]);
-
+  /*
+   * ENRICH HOLDINGS WITH LIVE ANGEL ONE PRICE
+   */
   const holdings = useMemo(() => {
     return portfolio
       .map((holding) => {
+        const symbol = normalizeSymbol(
+          holding.symbol ||
+            holding.tradingSymbol
+        );
+
+        const liveStock =
+          stockMap.get(symbol);
+
         const quantity = Number(
-          holding.quantity ||
-            holding.shares ||
+          holding.quantity ??
+            holding.shares ??
             0
         );
 
         const averagePrice = Number(
-          holding.averagePrice ||
-            holding.avgPrice ||
-            holding.buyPrice ||
+          holding.averagePrice ??
+            holding.avgPrice ??
+            holding.buyPrice ??
+            holding.averageCost ??
             0
         );
 
         const currentPrice = Number(
-          holding.currentPrice ||
-            holding.price ||
-            averagePrice ||
+          liveStock?.price ??
+            liveStock?.currentPrice ??
+            liveStock?.ltp ??
+            liveStock?.close ??
+            holding.currentPrice ??
+            holding.price ??
+            averagePrice ??
             0
         );
 
@@ -315,19 +449,77 @@ function Portfolio() {
 
         return {
           ...holding,
+
+          symbol:
+            holding.symbol ||
+            symbol,
+
           quantity,
           averagePrice,
           currentPrice,
+
           invested,
           currentValue,
           profitLoss,
           returnPercent,
+
+          liveStock,
+          isLive: Boolean(
+            liveStock?.isLive
+          ),
+          dataSource:
+            liveStock?.dataSource ||
+            holding.dataSource ||
+            "Portfolio",
+          lastMarketUpdate:
+            liveStock?.lastUpdated ||
+            null,
         };
       })
       .filter(
         (holding) => holding.quantity > 0
       );
-  }, [portfolio]);
+  }, [portfolio, stockMap]);
+
+  /*
+   * PORTFOLIO VALUATION
+   */
+  const totalValue = useMemo(() => {
+    return holdings.reduce(
+      (total, holding) =>
+        total + holding.currentValue,
+      0
+    );
+  }, [holdings]);
+
+  const totalInvested = useMemo(() => {
+    return holdings.reduce(
+      (total, holding) =>
+        total + holding.invested,
+      0
+    );
+  }, [holdings]);
+
+  const totalProfitLoss = useMemo(() => {
+    return holdings.reduce(
+      (total, holding) =>
+        total + holding.profitLoss,
+      0
+    );
+  }, [holdings]);
+
+  const totalAccountValue =
+    totalValue + balance;
+
+  const profitPercent = useMemo(() => {
+    if (!totalInvested) return 0;
+
+    return (
+      (totalProfitLoss /
+        totalInvested) *
+      100
+    );
+  }, [totalProfitLoss, totalInvested]);
 
   const profitableHoldings =
     holdings.filter(
@@ -340,29 +532,32 @@ function Portfolio() {
     );
 
   const buyTransactions =
-    transactions.filter(
-      (transaction) =>
-        String(
-          transaction.type ||
-            transaction.action ||
-            ""
-        ).toUpperCase() === "BUY"
-    );
+    transactions.filter((transaction) => {
+      const type = String(
+        transaction.type ||
+          transaction.action ||
+          ""
+      ).toUpperCase();
+
+      return type === "BUY";
+    });
 
   const sellTransactions =
-    transactions.filter(
-      (transaction) =>
-        String(
-          transaction.type ||
-            transaction.action ||
-            ""
-        ).toUpperCase() === "SELL"
-    );
+    transactions.filter((transaction) => {
+      const type = String(
+        transaction.type ||
+          transaction.action ||
+          ""
+      ).toUpperCase();
+
+      return type === "SELL";
+    });
 
   const allocation = useMemo(() => {
     return holdings
       .map((holding) => ({
         ...holding,
+
         percentage:
           totalValue > 0
             ? (holding.currentValue /
@@ -372,7 +567,8 @@ function Portfolio() {
       }))
       .sort(
         (a, b) =>
-          b.currentValue - a.currentValue
+          b.currentValue -
+          a.currentValue
       );
   }, [holdings, totalValue]);
 
@@ -398,22 +594,200 @@ function Portfolio() {
 
   const isProfit = totalProfitLoss >= 0;
 
-  // Existing holding BUY / SELL
+  /*
+   * LIVE MARKET STATUS
+   */
+  const liveStockCount = stocks.filter(
+    (stock) => stock.isLive
+  ).length;
+
+  const marketDataLive =
+    stocks.length > 0 &&
+    liveStockCount > 0;
+
+  /*
+   * PERFORMANCE CHART DATA
+   */
+  const chartPoints = useMemo(() => {
+    return performanceHistory.filter(
+      (point) =>
+        Number.isFinite(point.value) &&
+        point.value >= 0 &&
+        point.date
+    );
+  }, [performanceHistory]);
+
+  const chartStats = useMemo(() => {
+    if (!chartPoints.length) {
+      return {
+        firstValue: 0,
+        latestValue: totalValue,
+        change: 0,
+        changePercent: 0,
+        highestValue: 0,
+        lowestValue: 0,
+      };
+    }
+
+    const firstValue =
+      chartPoints[0].value;
+
+    const latestValue =
+      chartPoints[
+        chartPoints.length - 1
+      ].value;
+
+    const change =
+      latestValue - firstValue;
+
+    const changePercent =
+      firstValue > 0
+        ? (change / firstValue) * 100
+        : 0;
+
+    const values = chartPoints.map(
+      (point) => point.value
+    );
+
+    return {
+      firstValue,
+      latestValue,
+      change,
+      changePercent,
+      highestValue: Math.max(
+        ...values
+      ),
+      lowestValue: Math.min(
+        ...values
+      ),
+    };
+  }, [chartPoints, totalValue]);
+
+  /*
+   * CREATE SVG CHART PATH
+   */
+  const chartGeometry = useMemo(() => {
+    if (chartPoints.length < 2) {
+      return null;
+    }
+
+    const width = 1000;
+    const height = 300;
+    const paddingX = 8;
+    const paddingY = 22;
+
+    const values = chartPoints.map(
+      (point) => point.value
+    );
+
+    const minValue = Math.min(
+      ...values
+    );
+
+    const maxValue = Math.max(
+      ...values
+    );
+
+    const range =
+      maxValue - minValue;
+
+    const safeRange =
+      range === 0 ? 1 : range;
+
+    const coordinates =
+      chartPoints.map(
+        (point, index) => {
+          const x =
+            paddingX +
+            (index /
+              (chartPoints.length - 1)) *
+              (width -
+                paddingX * 2);
+
+          const y =
+            height -
+            paddingY -
+            ((point.value -
+              minValue) /
+              safeRange) *
+              (height -
+                paddingY * 2);
+
+          return {
+            x,
+            y,
+            ...point,
+          };
+        }
+      );
+
+    const linePath = coordinates
+      .map((point, index) => {
+        return `${
+          index === 0 ? "M" : "L"
+        } ${point.x} ${point.y}`;
+      })
+      .join(" ");
+
+    const areaPath = `${linePath} L ${width - paddingX} ${height - paddingY} L ${paddingX} ${height - paddingY} Z`;
+
+    return {
+      width,
+      height,
+      coordinates,
+      linePath,
+      areaPath,
+      minValue,
+      maxValue,
+    };
+  }, [chartPoints]);
+
+  /*
+   * PERFORMANCE CHART LABELS
+   */
+  const chartLabels = useMemo(() => {
+    if (!chartPoints.length) {
+      return [];
+    }
+
+    const indexes = [
+      0,
+      Math.floor(
+        (chartPoints.length - 1) * 0.33
+      ),
+      Math.floor(
+        (chartPoints.length - 1) * 0.66
+      ),
+      chartPoints.length - 1,
+    ];
+
+    return [
+      ...new Set(indexes),
+    ].map((index) => ({
+      index,
+      ...chartPoints[index],
+    }));
+  }, [chartPoints]);
+
+  /*
+   * TRADE MODALS
+   */
   const openTradeModal = (
     type,
     holding
   ) => {
     setSelectedHolding(holding);
     setTradeType(type);
+
     setTradeSymbol(
       holding?.symbol || ""
     );
+
     setTradeQuantity("");
     setTradeMessage("");
     setTradeError("");
   };
 
-  // First BUY from empty portfolio
   const openPortfolioBuyModal = () => {
     setSelectedHolding(null);
     setTradeType("BUY");
@@ -436,31 +810,35 @@ function Portfolio() {
   const selectedTradeStock = useMemo(() => {
     if (!tradeSymbol) return null;
 
+    const normalized =
+      normalizeSymbol(tradeSymbol);
+
     return (
-      stocks.find(
-        (stock) =>
-          String(stock.symbol)
-            .toUpperCase() ===
-          String(tradeSymbol)
-            .toUpperCase()
-      ) || null
+      stockMap.get(normalized) ||
+      null
     );
-  }, [stocks, tradeSymbol]);
+  }, [stockMap, tradeSymbol]);
 
   const tradeMarketPrice = Number(
-    selectedHolding?.currentPrice ||
-      selectedHolding?.price ||
-      selectedTradeStock?.price ||
-      selectedTradeStock?.currentPrice ||
-      selectedTradeStock?.close ||
+    selectedTradeStock?.price ??
+      selectedTradeStock?.currentPrice ??
+      selectedTradeStock?.ltp ??
+      selectedTradeStock?.close ??
+      selectedHolding?.currentPrice ??
+      selectedHolding?.price ??
       0
   );
 
+  /*
+   * BUY / SELL
+   */
   const handleTrade = async () => {
     const symbol =
       tradeType === "BUY"
-        ? tradeSymbol
-        : selectedHolding?.symbol;
+        ? normalizeSymbol(tradeSymbol)
+        : normalizeSymbol(
+            selectedHolding?.symbol
+          );
 
     if (!tradeType || !symbol) {
       setTradeError(
@@ -495,6 +873,26 @@ function Portfolio() {
       return;
     }
 
+    if (
+      tradeType === "BUY" &&
+      !selectedTradeStock
+    ) {
+      setTradeError(
+        "Selected stock is not available in the live market feed."
+      );
+      return;
+    }
+
+    if (
+      tradeType === "BUY" &&
+      tradeMarketPrice <= 0
+    ) {
+      setTradeError(
+        "Live market price is unavailable. Please refresh and try again."
+      );
+      return;
+    }
+
     try {
       setTradeLoading(true);
       setTradeError("");
@@ -521,6 +919,15 @@ function Portfolio() {
 
       await loadPortfolio(false);
 
+      /*
+       * Reload performance history after
+       * a successful trade. The backend
+       * snapshot engine may create a
+       * new valuation point when the
+       * portfolio is requested.
+       */
+      await loadPerformanceHistory();
+
       setTradeQuantity("");
 
       setTimeout(() => {
@@ -544,6 +951,9 @@ function Portfolio() {
     }
   };
 
+  /*
+   * LOADING
+   */
   if (loading) {
     return (
       <div className="portfolio-shell">
@@ -562,7 +972,8 @@ function Portfolio() {
             </div>
 
             <div className="portfolio-loading-text">
-              Syncing your holdings and
+              Syncing your holdings,
+              live prices and
               transactions...
             </div>
           </div>
@@ -571,6 +982,9 @@ function Portfolio() {
     );
   }
 
+  /*
+   * ERROR
+   */
   if (error) {
     return (
       <div className="portfolio-shell">
@@ -625,8 +1039,17 @@ function Portfolio() {
           </div>
 
           <div className="portfolio-live-status">
-            <span className="portfolio-live-dot" />
-            LIVE MARKET DATA
+            <span
+              className={
+                marketDataLive
+                  ? "portfolio-live-dot"
+                  : "portfolio-live-dot offline"
+              }
+            />
+
+            {marketDataLive
+              ? "LIVE MARKET DATA"
+              : "MARKET DATA SYNCING"}
           </div>
         </div>
 
@@ -641,16 +1064,20 @@ function Portfolio() {
             <h1>Your Portfolio</h1>
 
             <p>
-              Track your holdings, performance
-              and capital allocation in real
-              time.
+              Track your holdings,
+              performance and capital
+              allocation using live
+              Angel One market data.
             </p>
           </div>
 
           <button
             className="portfolio-refresh-premium"
             onClick={() =>
-              loadPortfolio(false)
+              Promise.all([
+                loadPortfolio(false),
+                loadPerformanceHistory(),
+              ])
             }
             disabled={refreshing}
           >
@@ -717,6 +1144,7 @@ function Portfolio() {
             <div className="portfolio-hero-stats">
               <div className="portfolio-hero-stat">
                 <span>Invested</span>
+
                 <strong>
                   {formatCompactMoney(
                     totalInvested
@@ -726,6 +1154,7 @@ function Portfolio() {
 
               <div className="portfolio-hero-stat">
                 <span>Cash Balance</span>
+
                 <strong>
                   {formatCompactMoney(
                     balance
@@ -734,7 +1163,18 @@ function Portfolio() {
               </div>
 
               <div className="portfolio-hero-stat">
+                <span>Account Value</span>
+
+                <strong>
+                  {formatCompactMoney(
+                    totalAccountValue
+                  )}
+                </strong>
+              </div>
+
+              <div className="portfolio-hero-stat">
                 <span>Positions</span>
+
                 <strong>
                   {holdings.length}
                 </strong>
@@ -745,7 +1185,10 @@ function Portfolio() {
           <div className="portfolio-hero-footer">
             <div>
               <Activity size={15} />
-              Portfolio monitor active
+
+              {marketDataLive
+                ? "Angel One market monitor active"
+                : "Market data connection syncing"}
             </div>
 
             <div>
@@ -769,6 +1212,7 @@ function Portfolio() {
 
             <div>
               <span>Cash Available</span>
+
               <strong>
                 {formatMoney(balance)}
               </strong>
@@ -784,6 +1228,7 @@ function Portfolio() {
 
             <div>
               <span>Invested Capital</span>
+
               <strong>
                 {formatMoney(
                   totalInvested
@@ -926,8 +1371,7 @@ function Portfolio() {
               </span>
 
               <strong>
-                {buyTransactions.length +
-                  sellTransactions.length}
+                {transactions.length}
               </strong>
 
               <small>
@@ -953,14 +1397,14 @@ function Portfolio() {
               </h2>
 
               <p>
-                Historical portfolio charting
-                will be connected to your
-                market history engine.
+                Historical portfolio
+                valuation captured from
+                your live Meridian account.
               </p>
             </div>
 
             <div className="portfolio-period-switcher">
-              {["3M", "1Y", "2Y"].map(
+              {PERFORMANCE_PERIODS.map(
                 (period) => (
                   <button
                     key={period}
@@ -975,6 +1419,9 @@ function Portfolio() {
                         period
                       )
                     }
+                    disabled={
+                      performanceLoading
+                    }
                   >
                     {period}
                   </button>
@@ -983,31 +1430,350 @@ function Portfolio() {
             </div>
           </div>
 
-          <div className="performance-unavailable-card">
-            <div className="performance-unavailable-icon">
-              <Activity size={25} />
+          {/* PERFORMANCE SUMMARY */}
+          <div className="performance-metrics">
+
+            <div className="performance-metric">
+              <span>PERIOD VALUE</span>
+
+              <strong>
+                {formatCompactMoney(
+                  chartStats.latestValue
+                )}
+              </strong>
             </div>
 
-            <div>
-              <span className="performance-unavailable-badge">
-                DATA ENGINE
-              </span>
+            <div className="performance-metric">
+              <span>PERIOD CHANGE</span>
 
-              <h3>
-                Performance analytics
-                coming online
-              </h3>
+              <strong
+                className={
+                  chartStats.change >= 0
+                    ? "positive-text"
+                    : "negative-text"
+                }
+              >
+                {formatMoney(
+                  Math.abs(
+                    chartStats.change
+                  )
+                )}
+              </strong>
 
-              <p>
-                Your portfolio data is
-                connected to MongoDB.
-                Historical portfolio
-                performance will appear
-                here once the valuation
-                history engine is connected.
-              </p>
+              <small
+                className={
+                  chartStats.change >= 0
+                    ? "positive-text"
+                    : "negative-text"
+                }
+              >
+                {getPercent(
+                  chartStats.changePercent
+                )}
+              </small>
             </div>
+
+            <div className="performance-metric">
+              <span>HIGH</span>
+
+              <strong>
+                {formatCompactMoney(
+                  chartStats.highestValue
+                )}
+              </strong>
+            </div>
+
+            <div className="performance-metric">
+              <span>LOW</span>
+
+              <strong>
+                {formatCompactMoney(
+                  chartStats.lowestValue
+                )}
+              </strong>
+            </div>
+
           </div>
+
+          {/* CHART */}
+          {performanceLoading ? (
+            <div className="performance-chart-loading">
+              <div className="performance-chart-loading-line" />
+
+              <div>
+                <RefreshCw
+                  size={18}
+                  className="portfolio-refresh-icon refreshing"
+                />
+
+                Loading valuation history...
+              </div>
+            </div>
+          ) : performanceError ? (
+            <div className="performance-unavailable-card">
+              <div className="performance-unavailable-icon">
+                <Activity size={25} />
+              </div>
+
+              <div>
+                <span className="performance-unavailable-badge">
+                  HISTORY UNAVAILABLE
+                </span>
+
+                <h3>
+                  Unable to load performance history
+                </h3>
+
+                <p>
+                  {performanceError}
+                </p>
+
+                <button
+                  className="portfolio-primary-action"
+                  onClick={
+                    loadPerformanceHistory
+                  }
+                >
+                  <RefreshCw size={16} />
+                  Retry
+                </button>
+              </div>
+            </div>
+          ) : chartPoints.length < 2 ? (
+            <div className="performance-unavailable-card">
+              <div className="performance-unavailable-icon">
+                <Activity size={25} />
+              </div>
+
+              <div>
+                <span className="performance-unavailable-badge">
+                  BUILDING HISTORY
+                </span>
+
+                <h3>
+                  Your performance chart is
+                  being built
+                </h3>
+
+                <p>
+                  Meridian automatically
+                  stores portfolio valuation
+                  snapshots while you use the
+                  dashboard. Once at least two
+                  snapshots are available,
+                  your {activePeriod} performance
+                  curve will appear here.
+                </p>
+
+                <div className="performance-history-status">
+                  <span>
+                    {chartPoints.length}
+                  </span>
+
+                  valuation snapshot
+                  {chartPoints.length === 1
+                    ? ""
+                    : "s"} recorded
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="performance-chart-shell">
+
+              <div className="performance-chart-value-labels">
+                <span>
+                  {formatCompactMoney(
+                    chartGeometry.maxValue
+                  )}
+                </span>
+
+                <span>
+                  {formatCompactMoney(
+                    (chartGeometry.maxValue +
+                      chartGeometry.minValue) /
+                      2
+                  )}
+                </span>
+
+                <span>
+                  {formatCompactMoney(
+                    chartGeometry.minValue
+                  )}
+                </span>
+              </div>
+
+              <div className="performance-chart">
+
+                <div className="performance-chart-grid">
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                </div>
+
+                <svg
+                  viewBox={`0 0 ${chartGeometry.width} ${chartGeometry.height}`}
+                  preserveAspectRatio="none"
+                  className="performance-svg"
+                >
+                  <defs>
+                    <linearGradient
+                      id="portfolioPerformanceFill"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="0%"
+                        stopColor="rgba(32, 212, 147, 0.28)"
+                      />
+
+                      <stop
+                        offset="100%"
+                        stopColor="rgba(32, 212, 147, 0)"
+                      />
+                    </linearGradient>
+                  </defs>
+
+                  <path
+                    d={
+                      chartGeometry.areaPath
+                    }
+                    fill="url(#portfolioPerformanceFill)"
+                  />
+
+                  <path
+                    d={
+                      chartGeometry.linePath
+                    }
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="performance-chart-line"
+                  />
+
+                  {chartGeometry.coordinates.map(
+                    (point, index) => {
+                      const shouldShowDot =
+                        index ===
+                          0 ||
+                        index ===
+                          chartGeometry
+                            .coordinates
+                            .length -
+                            1 ||
+                        index %
+                          Math.max(
+                            1,
+                            Math.floor(
+                              chartGeometry
+                                .coordinates
+                                .length /
+                                8
+                            )
+                          ) ===
+                          0;
+
+                      if (!shouldShowDot) {
+                        return null;
+                      }
+
+                      return (
+                        <circle
+                          key={`${point.date}-${index}`}
+                          cx={point.x}
+                          cy={point.y}
+                          r="4"
+                          className="performance-chart-point"
+                        />
+                      );
+                    }
+                  )}
+                </svg>
+
+                <div className="performance-chart-hover-layer">
+                  {chartGeometry.coordinates.map(
+                    (point, index) => (
+                      <div
+                        key={`${point.date}-hover-${index}`}
+                        className="performance-chart-hover-point"
+                        style={{
+                          left: `${
+                            (point.x /
+                              chartGeometry.width) *
+                            100
+                          }%`,
+                          top: `${
+                            (point.y /
+                              chartGeometry.height) *
+                            100
+                          }%`,
+                        }}
+                      >
+                        <div className="performance-chart-tooltip">
+                          <strong>
+                            {formatMoney(
+                              point.value
+                            )}
+                          </strong>
+
+                          <span>
+                            {formatChartDate(
+                              point.date,
+                              activePeriod
+                            )}
+                          </span>
+
+                          <small>
+                            P/L{" "}
+                            {formatMoney(
+                              point.profitLoss
+                            )}
+                          </small>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+
+              </div>
+
+              <div className="performance-chart-axis">
+                {chartLabels.map(
+                  (label) => (
+                    <span
+                      key={`${label.date}-${label.index}`}
+                    >
+                      {formatChartDate(
+                        label.date,
+                        activePeriod
+                      )}
+                    </span>
+                  )
+                )}
+              </div>
+
+              <div className="performance-chart-footer">
+                <div>
+                  <span className="performance-legend-dot" />
+
+                  Portfolio Value
+                </div>
+
+                <div>
+                  {chartPoints.length} snapshots
+                </div>
+
+                <div>
+                  Source: MongoDB PortfolioHistory
+                </div>
+              </div>
+
+            </div>
+          )}
 
         </section>
 
@@ -1112,6 +1878,9 @@ function Portfolio() {
 
                                   <span>
                                     NSE • Equity
+                                    {holding.isLive
+                                      ? " • LIVE"
+                                      : ""}
                                   </span>
                                 </div>
 
@@ -1200,7 +1969,6 @@ function Portfolio() {
 
             <div className="portfolio-panel-header">
               <div>
-
                 <div className="portfolio-eyebrow">
                   <Layers3 size={14} />
                   ALLOCATION
@@ -1209,7 +1977,6 @@ function Portfolio() {
                 <h2>
                   Capital Distribution
                 </h2>
-
               </div>
             </div>
 
@@ -1414,8 +2181,8 @@ function Portfolio() {
 
                         const total =
                           Number(
-                            transaction.total ||
-                              transaction.totalAmount ||
+                            transaction.total ??
+                              transaction.totalAmount ??
                               quantity *
                                 price
                           );
@@ -1526,7 +2293,9 @@ function Portfolio() {
 
           <div>
             <Server size={14} />
-            Meridian API online
+            {marketDataLive
+              ? "Angel One market feed live"
+              : "Meridian API online"}
           </div>
 
         </footer>
@@ -1683,12 +2452,9 @@ function Portfolio() {
 
               <div className="portfolio-modal-footer">
                 <span>
-                  Position updated{" "}
-                  {lastUpdated
-                    ? formatDateTime(
-                        lastUpdated
-                      )
-                    : "--"}
+                  {selectedHolding.isLive
+                    ? "Live price from Angel One"
+                    : "Latest available price"}
                 </span>
               </div>
 
@@ -1733,7 +2499,7 @@ function Portfolio() {
 
             </div>
 
-            {/* STOCK SELECTOR FOR FIRST BUY */}
+            {/* STOCK SELECTOR */}
             {tradeType === "BUY" &&
               !selectedHolding && (
                 <div className="trade-stock-selector">
@@ -1748,6 +2514,7 @@ function Portfolio() {
                       setTradeSymbol(
                         event.target.value
                       );
+
                       setTradeError("");
                     }}
                     disabled={tradeLoading}
@@ -1756,8 +2523,12 @@ function Portfolio() {
                       Choose a stock
                     </option>
 
-                    {stocks.map(
-                      (stock) => (
+                    {stocks
+                      .filter(
+                        (stock) =>
+                          stock.isLive !== false
+                      )
+                      .map((stock) => (
                         <option
                           key={stock.symbol}
                           value={stock.symbol}
@@ -1767,12 +2538,12 @@ function Portfolio() {
                           {Number(
                             stock.price ||
                               stock.currentPrice ||
+                              stock.ltp ||
                               stock.close ||
                               0
                           ).toFixed(2)}
                         </option>
-                      )
-                    )}
+                      ))}
 
                   </select>
 
@@ -1799,6 +2570,9 @@ function Portfolio() {
 
                   <span>
                     NSE • Equity
+                    {selectedTradeStock?.isLive
+                      ? " • LIVE"
+                      : ""}
                   </span>
                 </div>
 
@@ -1809,9 +2583,11 @@ function Portfolio() {
                   </span>
 
                   <strong>
-                    {formatMoney(
-                      tradeMarketPrice
-                    )}
+                    {tradeMarketPrice > 0
+                      ? formatMoney(
+                          tradeMarketPrice
+                        )
+                      : "--"}
                   </strong>
 
                 </div>
@@ -1835,6 +2611,7 @@ function Portfolio() {
                   setTradeQuantity(
                     event.target.value
                   );
+
                   setTradeError("");
                   setTradeMessage("");
                 }}
@@ -1905,6 +2682,7 @@ function Portfolio() {
                       size={17}
                       className="portfolio-refresh-icon refreshing"
                     />
+
                     Processing...
                   </>
                 ) : (
@@ -1923,6 +2701,7 @@ function Portfolio() {
 
               <div className="trade-security-note">
                 <ShieldCheck size={14} />
+
                 Order secured through
                 Meridian authentication
               </div>

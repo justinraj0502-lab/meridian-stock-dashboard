@@ -32,35 +32,27 @@ function Login() {
   const location = useLocation();
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] =
-    useState("");
+  const [password, setPassword] = useState("");
 
   const [otp, setOtp] = useState("");
   const [verificationEmail, setVerificationEmail] =
     useState("");
 
-  const [showPassword, setShowPassword] =
-    useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const [step, setStep] =
-    useState("login");
+  const [step, setStep] = useState("login");
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [resending, setResending] =
-    useState(false);
+  const [resending, setResending] = useState(false);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
-  const [success, setSuccess] =
-    useState(
-      location.state?.message || ""
-    );
+  const [success, setSuccess] = useState(
+    location.state?.message || ""
+  );
 
-  const [resendCooldown, setResendCooldown] =
-    useState(0);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   /* =========================================================
      CLEAR NAVIGATION MESSAGE FROM URL HISTORY
@@ -105,8 +97,7 @@ function Login() {
     setError("");
     setSuccess("");
 
-    const cleanEmail =
-      email.trim().toLowerCase();
+    const cleanEmail = email.trim().toLowerCase();
 
     if (!cleanEmail || !password) {
       setError(
@@ -134,11 +125,6 @@ function Login() {
         password
       );
 
-      /*
-        Backend sends the login OTP here.
-        JWT is NOT stored until OTP verification.
-      */
-
       setVerificationEmail(
         data?.email || cleanEmail
       );
@@ -157,22 +143,11 @@ function Login() {
 
       startResendCooldown();
     } catch (err) {
-      /*
-        If the account exists but has not verified
-        its registration email, backend returns
-        requiresVerification: true.
-
-        Send the user to the registration
-        verification flow.
-      */
-
       if (
         err?.requiresVerification &&
         err?.email
       ) {
-        setVerificationEmail(
-          err.email
-        );
+        setVerificationEmail(err.email);
 
         setEmail(err.email);
 
@@ -180,10 +155,6 @@ function Login() {
           "Please verify your email before logging in."
         );
 
-        /*
-          Give the user a clear route to finish
-          registration verification.
-        */
         return;
       }
 
@@ -206,8 +177,7 @@ function Login() {
     setError("");
     setSuccess("");
 
-    const cleanOtp =
-      otp.trim();
+    const cleanOtp = otp.trim();
 
     if (!/^\d{6}$/.test(cleanOtp)) {
       setError(
@@ -281,10 +251,6 @@ function Login() {
           "Unable to resend the verification code."
       );
 
-      /*
-        Backend may return 429 when the server-side
-        60-second OTP cooldown is still active.
-      */
       if (
         err?.status === 429 ||
         err?.code === "OTP_COOLDOWN"
@@ -334,7 +300,6 @@ function Login() {
         <div className="auth-particle auth-particle-four" />
       </div>
 
-
       {/* =================================================
           CONTENT
       ================================================= */}
@@ -365,7 +330,6 @@ function Login() {
 
           </div>
 
-
           <div className="auth-showcase-content">
 
             <div className="auth-eyebrow">
@@ -375,7 +339,6 @@ function Login() {
                 ? "PERSONAL MARKET TERMINAL"
                 : "SECURE LOGIN VERIFICATION"}
             </div>
-
 
             <h1>
               {step === "login" ? (
@@ -397,13 +360,11 @@ function Login() {
               )}
             </h1>
 
-
             <p>
               {step === "login"
                 ? "A focused workspace for tracking markets, managing your portfolio, analysing positions and learning the fundamentals of investing."
                 : "We've sent a secure one-time verification code to your email. Confirm the code to continue into your Meridian workspace."}
             </p>
-
 
             {/* =================================================
                 MARKET VISUAL
@@ -423,12 +384,9 @@ function Login() {
                   </strong>
                 </div>
 
-                <Activity
-                  size={18}
-                />
+                <Activity size={18} />
 
               </div>
-
 
               <div className="auth-chart">
 
@@ -467,7 +425,6 @@ function Login() {
 
                   </defs>
 
-
                   <path
                     d="
                       M0 118
@@ -484,7 +441,6 @@ function Login() {
                     strokeWidth="3"
                     vectorEffect="non-scaling-stroke"
                   />
-
 
                   <path
                     d="
@@ -506,7 +462,6 @@ function Login() {
                 </svg>
 
               </div>
-
 
               <div className="auth-terminal-footer">
 
@@ -541,7 +496,6 @@ function Login() {
 
           </div>
 
-
           <div className="auth-showcase-footer">
 
             <span>
@@ -557,7 +511,6 @@ function Login() {
           </div>
 
         </section>
-
 
         {/* =================================================
             LOGIN PANEL
@@ -581,21 +534,15 @@ function Login() {
 
               </div>
 
-
               <div className="auth-form-icon">
 
                 {step === "login" ? (
-                  <LockKeyhole
-                    size={19}
-                  />
+                  <LockKeyhole size={19} />
                 ) : (
-                  <KeyRound
-                    size={19}
-                  />
+                  <KeyRound size={19} />
                 )}
 
               </div>
-
 
               <div className="auth-form-heading">
 
@@ -605,13 +552,11 @@ function Login() {
                     : "EMAIL VERIFICATION"}
                 </span>
 
-
                 <h2>
                   {step === "login"
                     ? "Sign in to Meridian"
                     : "Verify your login"}
                 </h2>
-
 
                 <p>
                   {step === "login"
@@ -622,7 +567,6 @@ function Login() {
               </div>
 
             </div>
-
 
             {/* =================================================
                 STATUS
@@ -635,14 +579,12 @@ function Login() {
               </div>
             )}
 
-
             {success && !error && (
               <div className="auth-message auth-message-success">
                 <span />
                 {success}
               </div>
             )}
-
 
             {/* =================================================
                 LOGIN FORM
@@ -662,14 +604,12 @@ function Login() {
                     EMAIL ADDRESS
                   </label>
 
-
                   <div className="auth-input-wrapper">
 
                     <Mail
                       className="auth-input-icon"
                       size={17}
                     />
-
 
                     <input
                       id="login-email"
@@ -689,7 +629,6 @@ function Login() {
 
                 </div>
 
-
                 {/* PASSWORD */}
 
                 <div className="auth-field">
@@ -700,12 +639,14 @@ function Login() {
                       PASSWORD
                     </label>
 
-                    <span>
-                      SECURED
-                    </span>
+                    <Link
+                      to="/forgot-password"
+                      className="auth-forgot-link"
+                    >
+                      Forgot password?
+                    </Link>
 
                   </div>
-
 
                   <div className="auth-input-wrapper">
 
@@ -713,7 +654,6 @@ function Login() {
                       className="auth-input-icon"
                       size={17}
                     />
-
 
                     <input
                       id="login-password"
@@ -733,14 +673,12 @@ function Login() {
                       disabled={loading}
                     />
 
-
                     <button
                       type="button"
                       className="auth-password-toggle"
                       onClick={() =>
                         setShowPassword(
-                          (value) =>
-                            !value
+                          (value) => !value
                         )
                       }
                       aria-label={
@@ -762,7 +700,6 @@ function Login() {
 
                 </div>
 
-
                 {/* SUBMIT */}
 
                 <button
@@ -777,13 +714,9 @@ function Login() {
                       : "Continue to verification"}
                   </span>
 
-
                   {!loading && (
-                    <ArrowRight
-                      size={17}
-                    />
+                    <ArrowRight size={17} />
                   )}
-
 
                   {loading && (
                     <span className="auth-spinner" />
@@ -793,7 +726,6 @@ function Login() {
 
               </form>
             )}
-
 
             {/* =================================================
                 OTP FORM
@@ -811,14 +743,12 @@ function Login() {
                     VERIFICATION CODE
                   </label>
 
-
                   <div className="auth-input-wrapper">
 
                     <KeyRound
                       className="auth-input-icon"
                       size={17}
                     />
-
 
                     <input
                       id="login-otp"
@@ -845,7 +775,6 @@ function Login() {
 
                   </div>
 
-
                   <div
                     style={{
                       marginTop: "10px",
@@ -870,7 +799,6 @@ function Login() {
 
                 </div>
 
-
                 {/* VERIFY */}
 
                 <button
@@ -888,13 +816,9 @@ function Login() {
                       : "Verify and sign in"}
                   </span>
 
-
                   {!loading && (
-                    <ArrowRight
-                      size={17}
-                    />
+                    <ArrowRight size={17} />
                   )}
-
 
                   {loading && (
                     <span className="auth-spinner" />
@@ -902,14 +826,11 @@ function Login() {
 
                 </button>
 
-
                 {/* RESEND */}
 
                 <button
                   type="button"
-                  onClick={
-                    handleResendOtp
-                  }
+                  onClick={handleResendOtp}
                   disabled={
                     resending ||
                     resendCooldown > 0 ||
@@ -964,14 +885,11 @@ function Login() {
 
                 </button>
 
-
                 {/* BACK */}
 
                 <button
                   type="button"
-                  onClick={
-                    handleBackToLogin
-                  }
+                  onClick={handleBackToLogin}
                   disabled={loading}
                   style={{
                     border: "none",
@@ -1001,7 +919,6 @@ function Login() {
               </form>
             )}
 
-
             {/* =================================================
                 REGISTER
             ================================================= */}
@@ -1012,19 +929,15 @@ function Login() {
                 Don't have a Meridian account?
               </span>
 
-
               <Link to="/register">
 
                 Create account
 
-                <ArrowRight
-                  size={14}
-                />
+                <ArrowRight size={14} />
 
               </Link>
 
             </div>
-
 
             {/* =================================================
                 SECURITY
@@ -1043,7 +956,6 @@ function Login() {
             </div>
 
           </div>
-
 
           <div className="auth-copyright">
 

@@ -1,59 +1,76 @@
 /* =========================================================
    MERIDIAN PORTFOLIO — ULTRA PREMIUM FINANCE TERMINAL
+   Matched to current Portfolio.jsx
    ========================================================= */
 
-/* ---------- CORE ---------- */
-
 .portfolio-shell {
+  --p-bg: #07090d;
+  --p-panel: rgba(12, 17, 24, 0.88);
+  --p-panel-solid: #0c1118;
+  --p-border: rgba(255, 255, 255, 0.065);
+  --p-border-hover: rgba(255, 255, 255, 0.12);
+
+  --p-text: #f2f5f7;
+  --p-text-soft: #a6afb8;
+  --p-text-muted: #66717d;
+  --p-text-faint: #434c57;
+
   --p-gold: #f5b91b;
-  --p-gold-soft: rgba(245, 185, 27, 0.12);
+  --p-gold-soft: rgba(245, 185, 27, 0.1);
+
   --p-green: #20d493;
+  --p-green-soft: rgba(32, 212, 147, 0.1);
+
   --p-red: #ff5d6c;
+  --p-red-soft: rgba(255, 93, 108, 0.1);
+
   --p-blue: #4da3ff;
   --p-purple: #a77bff;
 
+  --p-radius: 17px;
+  --p-radius-sm: 12px;
+
   position: relative;
   isolation: isolate;
-
   min-height: 100vh;
   width: 100%;
-
   overflow-x: hidden;
+
+  color: var(--p-text);
 
   background:
     radial-gradient(
-      circle at 74% 5%,
+      circle at 76% 3%,
       rgba(245, 185, 27, 0.035),
-      transparent 25%
+      transparent 26%
     ),
     radial-gradient(
-      circle at 15% 80%,
+      circle at 14% 70%,
       rgba(77, 163, 255, 0.025),
-      transparent 28%
+      transparent 30%
     ),
-    #07090d;
+    var(--p-bg);
 }
 
-/* ---------- PREMIUM ATMOSPHERE ---------- */
+/* =========================================================
+   ATMOSPHERE
+   ========================================================= */
 
 .portfolio-shell::before {
   content: "";
-
   position: fixed;
   inset: 0;
-
   z-index: -3;
-
   pointer-events: none;
 
   background-image:
     linear-gradient(
-      rgba(255, 255, 255, 0.018) 1px,
+      rgba(255, 255, 255, 0.015) 1px,
       transparent 1px
     ),
     linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.018) 1px,
+      rgba(255, 255, 255, 0.015) 1px,
       transparent 1px
     );
 
@@ -68,29 +85,26 @@
 
 .portfolio-shell::after {
   content: "";
-
   position: fixed;
   inset: 0;
-
   z-index: -2;
-
   pointer-events: none;
 
   background:
     linear-gradient(
       180deg,
-      transparent 0%,
-      rgba(245, 185, 27, 0.012) 50%,
-      transparent 100%
+      transparent,
+      rgba(245, 185, 27, 0.012),
+      transparent
     );
 
-  animation: terminalAtmosphere 8s ease-in-out infinite;
+  animation: portfolioAtmosphere 9s ease-in-out infinite;
 }
 
-@keyframes terminalAtmosphere {
+@keyframes portfolioAtmosphere {
   0%,
   100% {
-    opacity: 0.55;
+    opacity: 0.5;
     transform: translateY(-1%);
   }
 
@@ -102,65 +116,56 @@
 
 .portfolio-bg-orb {
   position: fixed;
-
   z-index: -1;
-
   border-radius: 50%;
-
   pointer-events: none;
-
   filter: blur(90px);
-
   opacity: 0.18;
 }
 
 .portfolio-bg-orb-one {
   width: 360px;
   height: 360px;
-
   top: -180px;
   right: 8%;
-
   background: rgba(245, 185, 27, 0.12);
-
-  animation: premiumOrbOne 14s ease-in-out infinite;
+  animation: portfolioOrbOne 14s ease-in-out infinite;
 }
 
 .portfolio-bg-orb-two {
   width: 280px;
   height: 280px;
-
   bottom: 5%;
   left: 20%;
-
   background: rgba(32, 212, 147, 0.055);
-
-  animation: premiumOrbTwo 17s ease-in-out infinite;
+  animation: portfolioOrbTwo 17s ease-in-out infinite;
 }
 
-@keyframes premiumOrbOne {
+@keyframes portfolioOrbOne {
   0%,
   100% {
     transform: translate3d(0, 0, 0);
   }
 
   50% {
-    transform: translate3d(-45px, 55px, 0);
+    transform: translate3d(-40px, 45px, 0);
   }
 }
 
-@keyframes premiumOrbTwo {
+@keyframes portfolioOrbTwo {
   0%,
   100% {
     transform: translate3d(0, 0, 0);
   }
 
   50% {
-    transform: translate3d(35px, -40px, 0);
+    transform: translate3d(30px, -35px, 0);
   }
 }
 
-/* ---------- MAIN ---------- */
+/* =========================================================
+   MAIN
+   ========================================================= */
 
 .portfolio-main {
   position: relative;
@@ -170,15 +175,15 @@
   min-height: 100vh;
 
   margin-left: 250px;
-
   padding: 30px 38px 60px;
 
   box-sizing: border-box;
-
   overflow-x: hidden;
 }
 
-/* ---------- TOP BAR ---------- */
+/* =========================================================
+   TOPBAR
+   ========================================================= */
 
 .portfolio-topbar {
   min-height: 32px;
@@ -188,7 +193,6 @@
   justify-content: space-between;
 
   gap: 20px;
-
   margin-bottom: 30px;
 }
 
@@ -198,7 +202,6 @@
   gap: 8px;
 
   color: #4f5863;
-
   font-size: 8px;
   font-weight: 800;
   letter-spacing: 1.3px;
@@ -215,13 +218,9 @@
   gap: 12px;
 }
 
-.portfolio-live-status,
-.portfolio-updated {
+.portfolio-live-status {
   display: flex;
   align-items: center;
-}
-
-.portfolio-live-status {
   gap: 7px;
 
   padding: 7px 11px;
@@ -237,7 +236,6 @@
     );
 
   color: #6d7884;
-
   font-size: 6.5px;
   font-weight: 850;
   letter-spacing: 1px;
@@ -260,10 +258,18 @@
     0 0 0 3px rgba(32, 212, 147, 0.07),
     0 0 13px rgba(32, 212, 147, 0.45);
 
-  animation: livePulse 1.8s ease-in-out infinite;
+  animation: portfolioLivePulse 1.8s ease-in-out infinite;
 }
 
-@keyframes livePulse {
+.portfolio-live-dot.offline {
+  background: var(--p-red);
+
+  box-shadow:
+    0 0 0 3px rgba(255, 93, 108, 0.06),
+    0 0 12px rgba(255, 93, 108, 0.28);
+}
+
+@keyframes portfolioLivePulse {
   0%,
   100% {
     opacity: 1;
@@ -281,14 +287,17 @@
 }
 
 .portfolio-updated {
+  display: flex;
+  align-items: center;
   gap: 6px;
 
   color: #4e5864;
-
   font-size: 7px;
 }
 
-/* ---------- HEADER ---------- */
+/* =========================================================
+   HEADER
+   ========================================================= */
 
 .portfolio-header {
   position: relative;
@@ -298,7 +307,6 @@
   justify-content: space-between;
 
   gap: 30px;
-
   margin-bottom: 28px;
 }
 
@@ -310,12 +318,12 @@
   margin-bottom: 10px;
 
   color: var(--p-gold);
-
   font-size: 7px;
   font-weight: 900;
   letter-spacing: 1.8px;
 
-  text-shadow: 0 0 18px rgba(245, 185, 27, 0.2);
+  text-shadow:
+    0 0 18px rgba(245, 185, 27, 0.2);
 }
 
 .portfolio-header h1 {
@@ -331,7 +339,6 @@
 
   -webkit-background-clip: text;
   background-clip: text;
-
   color: transparent;
 
   font-size: clamp(30px, 3vw, 45px);
@@ -344,12 +351,13 @@
   margin: 11px 0 0;
 
   color: #59636f;
-
   font-size: 9px;
   line-height: 1.7;
 }
 
-/* ---------- REFRESH ---------- */
+/* =========================================================
+   REFRESH
+   ========================================================= */
 
 .portfolio-refresh-premium {
   position: relative;
@@ -357,11 +365,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   gap: 8px;
 
   min-width: 108px;
   height: 39px;
-
   padding: 0 16px;
 
   overflow: hidden;
@@ -407,12 +415,13 @@
 
   transform: skewX(-20deg);
 
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(245, 185, 27, 0.18),
-    transparent
-  );
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(245, 185, 27, 0.18),
+      transparent
+    );
 
   transition: left 0.5s ease;
 }
@@ -438,11 +447,23 @@
 }
 
 .portfolio-refresh-premium:disabled {
-  cursor: wait;
   opacity: 0.65;
+  cursor: wait;
 }
 
-/* ---------- HERO CARD ---------- */
+.portfolio-refresh-icon.refreshing {
+  animation: portfolioRefreshSpin 0.9s linear infinite;
+}
+
+@keyframes portfolioRefreshSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
 
 .portfolio-hero-card {
   position: relative;
@@ -505,12 +526,13 @@
 
   height: 1px;
 
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(245, 185, 27, 0.35),
-    transparent
-  );
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(245, 185, 27, 0.35),
+      transparent
+    );
 
   opacity: 0.7;
 }
@@ -534,12 +556,12 @@
     0 0 0 30px rgba(245, 185, 27, 0.012),
     0 0 0 60px rgba(245, 185, 27, 0.008);
 
-  animation: heroRing 12s ease-in-out infinite;
+  animation: portfolioHeroRing 12s ease-in-out infinite;
 
   pointer-events: none;
 }
 
-@keyframes heroRing {
+@keyframes portfolioHeroRing {
   0%,
   100% {
     transform: translate(0, 0) scale(1);
@@ -573,7 +595,6 @@
   margin-bottom: 9px;
 
   color: #606a76;
-
   font-size: 7px;
   font-weight: 850;
   letter-spacing: 1.35px;
@@ -591,7 +612,7 @@
     0 2px 20px rgba(255, 255, 255, 0.04);
 }
 
-.portfolio-return {
+.portfolio-hero-change {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -603,21 +624,30 @@
   font-size: 9px;
 }
 
-.portfolio-return strong {
+.portfolio-hero-change.positive,
+.positive-text {
+  color: var(--p-green);
+}
+
+.portfolio-hero-change.negative,
+.negative-text {
+  color: var(--p-red);
+}
+
+.portfolio-hero-change strong {
   font-weight: 800;
 }
 
-.portfolio-return small {
-  margin-left: 3px;
-
+.portfolio-hero-change span {
   color: #505a66;
-
   font-size: 7px;
 }
 
 .portfolio-hero-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(105px, 1fr));
+
+  grid-template-columns:
+    repeat(3, minmax(105px, 1fr));
 
   gap: 1px;
 
@@ -697,12 +727,15 @@
   gap: 6px;
 }
 
-/* ---------- SUMMARY CARDS ---------- */
+/* =========================================================
+   SUMMARY
+   ========================================================= */
 
 .portfolio-summary-grid {
   display: grid;
 
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
 
   gap: 12px;
 
@@ -719,7 +752,6 @@
   align-items: center;
 
   gap: 13px;
-
   padding: 17px;
 
   overflow: hidden;
@@ -792,6 +824,9 @@
 
   border-radius: 10px;
 
+  color: var(--p-gold);
+  background: rgba(245, 185, 27, 0.06);
+
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.025);
 }
@@ -804,7 +839,6 @@
   display: block;
 
   color: #68727d;
-
   font-size: 7px;
 }
 
@@ -829,7 +863,6 @@
   margin-top: 4px;
 
   color: #4e5864;
-
   font-size: 6.5px;
 }
 
@@ -843,17 +876,21 @@
     transform 0.2s ease;
 }
 
-.portfolio-summary-card:hover .portfolio-summary-arrow {
+.portfolio-summary-card:hover
+  .portfolio-summary-arrow {
   color: var(--p-gold);
   transform: translate(2px, -2px);
 }
 
-/* ---------- INSIGHTS ---------- */
+/* =========================================================
+   INSIGHTS
+   ========================================================= */
 
 .portfolio-insights-grid {
   display: grid;
 
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
 
   gap: 10px;
 
@@ -879,11 +916,15 @@
 
   transition:
     border-color 0.2s ease,
-    background 0.2s ease;
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .portfolio-insight-card:hover {
+  transform: translateY(-2px);
+
   border-color: rgba(255, 255, 255, 0.085);
+
   background: rgba(255, 255, 255, 0.02);
 }
 
@@ -908,7 +949,6 @@
   display: block;
 
   color: #56606b;
-
   font-size: 6.5px;
 }
 
@@ -918,11 +958,122 @@
   margin-top: 4px;
 
   color: #d8dde2;
-
   font-size: 12px;
 }
 
-/* ---------- PERFORMANCE ---------- */
+/* =========================================================
+   GENERAL PANELS
+   ========================================================= */
+
+.portfolio-panel {
+  position: relative;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.018),
+      rgba(255, 255, 255, 0.008)
+    );
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.022),
+    0 15px 45px rgba(0, 0, 0, 0.14);
+
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.portfolio-panel:hover {
+  border-color: rgba(255, 255, 255, 0.075);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 20px 55px rgba(0, 0, 0, 0.18);
+}
+
+.portfolio-main-grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.65fr)
+    minmax(285px, 0.85fr);
+
+  gap: 16px;
+
+  margin-bottom: 16px;
+}
+
+.portfolio-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 21px 22px 17px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.035);
+}
+
+.portfolio-panel-header h2 {
+  margin: 0;
+
+  color: #dfe4e8;
+
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+.portfolio-panel-header p {
+  margin: 6px 0 0;
+
+  color: #515b67;
+  font-size: 7px;
+}
+
+.portfolio-panel-kicker,
+.portfolio-section-kicker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-bottom: 7px;
+
+  color: #56616c;
+
+  font-size: 6.5px;
+  font-weight: 850;
+  letter-spacing: 1px;
+}
+
+.portfolio-panel-count {
+  flex-shrink: 0;
+
+  padding: 6px 9px;
+
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 7px;
+
+  background: rgba(255, 255, 255, 0.018);
+
+  color: #5a6470;
+
+  font-size: 6px;
+  font-weight: 800;
+}
+
+/* =========================================================
+   PERFORMANCE PANEL
+   ========================================================= */
 
 .portfolio-performance-panel {
   position: relative;
@@ -961,13 +1112,18 @@
 
   height: 1px;
 
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(245, 185, 27, 0.18),
-    transparent
-  );
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(245, 185, 27, 0.18),
+      transparent
+    );
 }
+
+/* =========================================================
+   PERFORMANCE HEADING
+   ========================================================= */
 
 .portfolio-section-heading {
   display: flex;
@@ -977,10 +1133,11 @@
   gap: 20px;
 
   padding: 23px 24px 18px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.035);
 }
 
-.portfolio-section-heading h2,
-.portfolio-panel-header h2 {
+.portfolio-section-heading h2 {
   margin: 0;
 
   color: #dfe4e8;
@@ -990,20 +1147,22 @@
   letter-spacing: -0.2px;
 }
 
-.portfolio-section-heading p,
-.portfolio-panel-header p {
+.portfolio-section-heading p {
   margin: 6px 0 0;
 
   color: #515b67;
-
   font-size: 7px;
 }
+
+/* =========================================================
+   PERIOD SWITCHER
+   ========================================================= */
 
 .portfolio-period-switcher {
   display: flex;
   align-items: center;
-  gap: 2px;
 
+  gap: 2px;
   padding: 3px;
 
   border: 1px solid rgba(255, 255, 255, 0.045);
@@ -1031,11 +1190,14 @@
 
   transition:
     color 0.2s ease,
-    background 0.2s ease;
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .portfolio-period-switcher button:hover {
   color: #b9c1c8;
+  transform: translateY(-1px);
 }
 
 .portfolio-period-switcher button.active {
@@ -1049,167 +1211,41 @@
     );
 
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 0 18px rgba(245, 185, 27, 0.025);
 }
 
-.portfolio-performance-unavailable {
-  min-height: 300px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 25px;
+.portfolio-period-switcher button:disabled {
+  opacity: 0.55;
+  cursor: wait;
 }
 
-.performance-unavailable-card {
-  position: relative;
+/* =========================================================
+   PERFORMANCE METRICS
+   ========================================================= */
 
-  width: min(500px, 100%);
-
-  padding: 31px;
-
-  text-align: center;
-
-  overflow: hidden;
-
-  border: 1px solid rgba(245, 185, 27, 0.075);
-  border-radius: 18px;
-
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(245, 185, 27, 0.065),
-      transparent 46%
-    ),
-    rgba(255, 255, 255, 0.012);
-
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.025),
-    0 18px 55px rgba(0, 0, 0, 0.2);
-}
-
-.performance-unavailable-card::before {
-  content: "";
-
-  position: absolute;
-
-  left: 20%;
-  right: 20%;
-  top: 0;
-
-  height: 1px;
-
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(245, 185, 27, 0.25),
-    transparent
-  );
-}
-
-.performance-unavailable-icon {
-  width: 49px;
-  height: 49px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  margin: 0 auto 15px;
-
-  border: 1px solid rgba(245, 185, 27, 0.12);
-  border-radius: 14px;
-
-  color: var(--p-gold);
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(245, 185, 27, 0.08),
-      rgba(245, 185, 27, 0.025)
-    );
-
-  box-shadow:
-    0 0 30px rgba(245, 185, 27, 0.045);
-
-  animation: unavailableFloat 4s ease-in-out infinite;
-}
-
-@keyframes unavailableFloat {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
-.performance-unavailable-card h3 {
-  margin: 0 0 7px;
-
-  color: #dce1e6;
-
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.performance-unavailable-card p {
-  max-width: 390px;
-
-  margin: 0 auto;
-
-  color: #59636e;
-
-  font-size: 8px;
-  line-height: 1.75;
-}
-
-.performance-unavailable-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-
-  margin-top: 16px;
-  padding: 7px 10px;
-
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 7px;
-
-  background: rgba(255, 255, 255, 0.018);
-
-  color: #626c77;
-
-  font-size: 6px;
-  font-weight: 850;
-  letter-spacing: 0.9px;
-}
-
-/* ---------- MAIN PANELS ---------- */
-
-.portfolio-main-grid {
+.performance-metrics {
   display: grid;
 
   grid-template-columns:
-    minmax(0, 1.65fr)
-    minmax(285px, 0.85fr);
+    repeat(4, minmax(0, 1fr));
 
-  gap: 16px;
+  gap: 1px;
 
-  margin-bottom: 16px;
-}
+  margin: 0 24px;
 
-.portfolio-panel {
-  position: relative;
-
-  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 11px;
 
   overflow: hidden;
 
-  border: 1px solid rgba(255, 255, 255, 0.055);
-  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.performance-metric {
+  min-width: 0;
+
+  padding: 13px 15px;
 
   background:
     linear-gradient(
@@ -1218,77 +1254,582 @@
       rgba(255, 255, 255, 0.008)
     );
 
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.022),
-    0 15px 45px rgba(0, 0, 0, 0.14);
-
-  transition:
-    border-color 0.25s ease,
-    box-shadow 0.25s ease;
+  transition: background 0.2s ease;
 }
 
-.portfolio-panel:hover {
-  border-color: rgba(255, 255, 255, 0.075);
-
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.025),
-    0 20px 55px rgba(0, 0, 0, 0.18);
+.performance-metric:hover {
+  background: rgba(245, 185, 27, 0.022);
 }
 
-.portfolio-panel-header {
+.performance-metric span {
+  display: block;
+
+  color: #4f5964;
+
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: 0.75px;
+  text-transform: uppercase;
+}
+
+.performance-metric strong {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #d9dfe4;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.performance-metric strong.positive {
+  color: var(--p-green);
+}
+
+.performance-metric strong.negative {
+  color: var(--p-red);
+}
+
+/* =========================================================
+   PERFORMANCE LOADING
+   ========================================================= */
+
+.performance-chart-loading {
+  min-height: 310px;
+
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 25px;
+}
+
+.performance-chart-loading-line {
+  width: min(650px, 80%);
+  height: 90px;
+
+  margin-bottom: 17px;
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.025),
+      rgba(255, 255, 255, 0.06),
+      rgba(255, 255, 255, 0.025)
+    );
+
+  background-size: 200% 100%;
+
+  animation: performanceSkeleton 1.6s ease-in-out infinite;
+}
+
+.performance-chart-loading::after {
+  content: "Loading portfolio performance";
+
+  color: #56606b;
+
+  font-size: 7px;
+  font-weight: 750;
+  letter-spacing: 0.8px;
+}
+
+@keyframes performanceSkeleton {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* =========================================================
+   PERFORMANCE UNAVAILABLE / BUILDING HISTORY
+   ========================================================= */
+
+.performance-unavailable-card {
+  min-height: 300px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 30px;
+
+  text-align: center;
+}
+
+.performance-unavailable-icon {
+  width: 48px;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 14px;
+
+  border: 1px solid rgba(245, 185, 27, 0.09);
+  border-radius: 13px;
+
+  color: var(--p-gold);
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(245, 185, 27, 0.07),
+      rgba(245, 185, 27, 0.018)
+    );
+
+  box-shadow:
+    0 0 28px rgba(245, 185, 27, 0.035);
+}
+
+.performance-unavailable-card h3 {
+  margin: 0;
+
+  color: #d9dfe4;
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.performance-unavailable-card p {
+  max-width: 400px;
+
+  margin: 8px 0 0;
+
+  color: #59636e;
+
+  font-size: 7px;
+  line-height: 1.75;
+}
+
+.performance-unavailable-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-top: 15px;
+  padding: 7px 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.045);
+  border-radius: 7px;
+
+  background: rgba(255, 255, 255, 0.015);
+
+  color: #59636e;
+
+  font-size: 5.8px;
+  font-weight: 850;
+  letter-spacing: 0.8px;
+}
+
+/* =========================================================
+   PERFORMANCE ERROR
+   ========================================================= */
+
+.performance-history-status {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
 
   gap: 15px;
 
-  padding: 21px 22px 17px;
+  margin: 15px 24px 0;
+  padding: 11px 13px;
+
+  border: 1px solid rgba(255, 93, 108, 0.075);
+  border-radius: 9px;
+
+  background: rgba(255, 93, 108, 0.018);
+
+  color: #59636e;
+
+  font-size: 7px;
 }
 
-.portfolio-panel-kicker,
-.portfolio-section-kicker {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  margin-bottom: 7px;
-
-  color: #56616c;
-
-  font-size: 6.5px;
-  font-weight: 850;
-  letter-spacing: 1px;
-}
-
-.portfolio-count-badge {
-  flex-shrink: 0;
-
-  padding: 6px 9px;
-
-  border: 1px solid rgba(255, 255, 255, 0.05);
+.performance-history-status button {
+  border: 1px solid rgba(245, 185, 27, 0.11);
   border-radius: 7px;
 
-  background: rgba(255, 255, 255, 0.018);
+  padding: 6px 10px;
 
-  color: #5a6470;
+  background: rgba(245, 185, 27, 0.035);
+
+  color: var(--p-gold);
 
   font-size: 6px;
   font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
-/* ---------- TABLE ---------- */
+.performance-history-status button:hover {
+  transform: translateY(-1px);
+  background: rgba(245, 185, 27, 0.07);
+}
+
+/* =========================================================
+   SVG PERFORMANCE CHART
+   ========================================================= */
+
+.performance-chart-shell {
+  position: relative;
+
+  width: 100%;
+
+  padding: 20px 24px 5px;
+
+  box-sizing: border-box;
+}
+
+.performance-chart-value-labels {
+  position: absolute;
+
+  top: 22px;
+  right: 24px;
+  bottom: 43px;
+
+  width: 45px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  pointer-events: none;
+}
+
+.performance-chart-value-labels span {
+  color: #424c57;
+
+  font-size: 5.8px;
+  font-weight: 700;
+
+  text-align: right;
+}
+
+.performance-chart {
+  position: relative;
+
+  width: 100%;
+  height: 315px;
+
+  overflow: visible;
+}
+
+.performance-svg {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: visible;
+}
+
+.performance-chart-grid {
+  stroke: rgba(255, 255, 255, 0.045);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.performance-chart-line {
+  fill: none;
+
+  stroke: var(--p-green);
+  stroke-width: 2;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  vector-effect: non-scaling-stroke;
+
+  filter:
+    drop-shadow(
+      0 0 5px rgba(32, 212, 147, 0.22)
+    );
+
+  animation: performanceLineReveal 1s
+    cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes performanceLineReveal {
+  from {
+    opacity: 0;
+    stroke-dasharray: 1400;
+    stroke-dashoffset: 1400;
+  }
+
+  to {
+    opacity: 1;
+    stroke-dasharray: 1400;
+    stroke-dashoffset: 0;
+  }
+}
+
+.performance-chart-point {
+  fill: var(--p-green);
+
+  stroke: #07100c;
+  stroke-width: 2;
+
+  vector-effect: non-scaling-stroke;
+
+  filter:
+    drop-shadow(
+      0 0 5px rgba(32, 212, 147, 0.3)
+    );
+
+  transition:
+    r 0.18s ease,
+    fill 0.18s ease;
+}
+
+.performance-chart-hover-layer {
+  fill: transparent;
+
+  cursor: crosshair;
+
+  outline: none;
+}
+
+.performance-chart-hover-layer:hover
+  + .performance-chart-point {
+  r: 5;
+}
+
+.performance-chart-hover-point {
+  fill: rgba(32, 212, 147, 0.13);
+
+  stroke: rgba(32, 212, 147, 0.5);
+  stroke-width: 1;
+
+  vector-effect: non-scaling-stroke;
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   CHART TOOLTIP
+   ========================================================= */
+
+.performance-chart-tooltip {
+  position: absolute;
+
+  z-index: 20;
+
+  min-width: 175px;
+
+  padding: 12px 13px;
+
+  border: 1px solid rgba(245, 185, 27, 0.14);
+  border-radius: 11px;
+
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(245, 185, 27, 0.08),
+      transparent 42%
+    ),
+    rgba(9, 13, 18, 0.96);
+
+  box-shadow:
+    0 20px 55px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  pointer-events: none;
+
+  animation: chartTooltipIn 0.14s ease;
+}
+
+@keyframes chartTooltipIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.performance-chart-tooltip-date {
+  margin-bottom: 9px;
+
+  color: #707b86;
+
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.performance-chart-tooltip-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding-bottom: 9px;
+  margin-bottom: 9px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+.performance-chart-tooltip-value span {
+  color: #59636e;
+  font-size: 6px;
+}
+
+.performance-chart-tooltip-value strong {
+  color: #f0f3f5;
+
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.performance-chart-tooltip-grid {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 8px 13px;
+}
+
+.performance-chart-tooltip-item span {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: #4f5964;
+  font-size: 5.8px;
+}
+
+.performance-chart-tooltip-item strong {
+  color: #aeb7bf;
+
+  font-size: 7px;
+  font-weight: 750;
+}
+
+.performance-chart-tooltip-item.positive strong {
+  color: var(--p-green);
+}
+
+.performance-chart-tooltip-item.negative strong {
+  color: var(--p-red);
+}
+
+/* =========================================================
+   CHART AXIS
+   ========================================================= */
+
+.performance-chart-axis {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 4px 52px 0 8px;
+
+  color: #414a55;
+
+  font-size: 5.8px;
+  font-weight: 700;
+}
+
+.performance-chart-axis span {
+  white-space: nowrap;
+}
+
+/* =========================================================
+   CHART FOOTER
+   ========================================================= */
+
+.performance-chart-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 10px 24px 14px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.035);
+
+  color: #454f5a;
+
+  font-size: 6px;
+}
+
+.performance-chart-footer > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.performance-chart-footer strong {
+  color: #7b858f;
+}
+
+.performance-legend-dot {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: var(--p-green);
+
+  box-shadow:
+    0 0 9px rgba(32, 212, 147, 0.4);
+}
+
+/* =========================================================
+   TABLE
+   ========================================================= */
 
 .portfolio-table-wrap {
   width: 100%;
-
   overflow-x: auto;
 
   scrollbar-width: thin;
+  scrollbar-color:
+    rgba(255, 255, 255, 0.08)
+    transparent;
+}
+
+.portfolio-table-wrap::-webkit-scrollbar {
+  height: 5px;
+}
+
+.portfolio-table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.portfolio-table-wrap::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .portfolio-table {
   width: 100%;
-
   min-width: 760px;
 
   border-collapse: collapse;
@@ -1329,7 +1870,7 @@
 
   transition:
     background 0.18s ease,
-    box-shadow 0.18s ease;
+    transform 0.18s ease;
 }
 
 .portfolio-table-row:hover {
@@ -1341,16 +1882,13 @@
     );
 }
 
-.portfolio-stock-cell,
-.transaction-stock {
+.portfolio-stock-cell {
   display: flex;
   align-items: center;
-
   gap: 9px;
 }
 
-.portfolio-stock-avatar,
-.transaction-avatar {
+.portfolio-stock-avatar {
   position: relative;
 
   width: 31px;
@@ -1384,15 +1922,15 @@
     box-shadow 0.2s ease;
 }
 
-.portfolio-table-row:hover .portfolio-stock-avatar {
+.portfolio-table-row:hover
+  .portfolio-stock-avatar {
   transform: scale(1.06);
 
   box-shadow:
     0 0 20px rgba(245, 185, 27, 0.07);
 }
 
-.portfolio-stock-cell strong,
-.transaction-stock strong {
+.portfolio-stock-cell strong {
   display: block;
 
   color: #d5dbe0;
@@ -1402,6 +1940,15 @@
 }
 
 .portfolio-stock-cell span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #4d5762;
+  font-size: 6px;
+}
+
+.table-subvalue {
   display: block;
 
   margin-top: 3px;
@@ -1419,7 +1966,6 @@
 
 .portfolio-return-cell strong {
   display: block;
-
   font-size: 7.5px;
 }
 
@@ -1447,12 +1993,15 @@
     transform 0.2s ease;
 }
 
-.portfolio-table-row:hover .portfolio-row-arrow {
+.portfolio-table-row:hover
+  .portfolio-row-arrow {
   color: var(--p-gold);
   transform: translateX(3px);
 }
 
-/* ---------- ALLOCATION ---------- */
+/* =========================================================
+   ALLOCATION
+   ========================================================= */
 
 .allocation-list {
   padding: 0 22px 20px;
@@ -1472,17 +2021,12 @@
   justify-content: space-between;
 
   gap: 10px;
-
   margin-bottom: 8px;
 }
 
-.allocation-name,
-.allocation-value {
+.allocation-name {
   display: flex;
   align-items: center;
-}
-
-.allocation-name {
   gap: 7px;
 }
 
@@ -1499,10 +2043,13 @@
 
   border-radius: 50%;
 
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 0 8px rgba(255, 255, 255, 0.05);
 }
 
 .allocation-value {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -1537,26 +2084,50 @@
   background:
     linear-gradient(
       90deg,
-      #f5b91b,
+      var(--p-gold),
       rgba(245, 185, 27, 0.35)
     );
 
   box-shadow:
     0 0 12px rgba(245, 185, 27, 0.15);
 
-  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.allocation-item:hover .allocation-bar span {
+.allocation-item:hover
+  .allocation-bar span {
   box-shadow:
     0 0 18px rgba(245, 185, 27, 0.24);
 }
 
-/* ---------- ALLOCATION HIGHLIGHT ---------- */
+.allocation-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: 18px;
+  padding-top: 13px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.045);
+
+  color: #525c67;
+  font-size: 6.5px;
+}
+
+.allocation-total strong {
+  color: #aeb7bf;
+  font-size: 8px;
+}
+
+/* =========================================================
+   ALLOCATION HIGHLIGHT
+   ========================================================= */
 
 .allocation-highlight {
   display: flex;
   align-items: center;
+
   gap: 10px;
 
   margin: 0 22px 22px;
@@ -1596,11 +2167,10 @@
   border-radius: 8px;
 
   color: var(--p-gold);
-
   background: rgba(245, 185, 27, 0.06);
 }
 
-.allocation-highlight div:nth-child(2) {
+.allocation-highlight > div:nth-child(2) {
   flex: 1;
 }
 
@@ -1608,7 +2178,6 @@
   display: block;
 
   color: #555f6a;
-
   font-size: 6px;
 }
 
@@ -1618,11 +2187,12 @@
   margin-top: 3px;
 
   color: #cbd2d8;
-
   font-size: 8.5px;
 }
 
-/* ---------- EMPTY ---------- */
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
 
 .portfolio-empty-state {
   min-height: 220px;
@@ -1651,7 +2221,6 @@
   border-radius: 13px;
 
   color: var(--p-gold);
-
   background: rgba(245, 185, 27, 0.035);
 
   box-shadow:
@@ -1678,7 +2247,9 @@
   line-height: 1.7;
 }
 
-/* ---------- TRANSACTIONS ---------- */
+/* =========================================================
+   TRANSACTIONS
+   ========================================================= */
 
 .transactions-panel {
   margin-bottom: 25px;
@@ -1687,10 +2258,10 @@
 .transaction-summary {
   display: flex;
   align-items: center;
+
   gap: 11px;
 
   color: #535d68;
-
   font-size: 6.5px;
 }
 
@@ -1701,6 +2272,7 @@
 .transaction-type {
   display: inline-flex;
   align-items: center;
+
   gap: 5px;
 
   padding: 5px 7px;
@@ -1715,26 +2287,21 @@
 .transaction-type.buy {
   color: var(--p-green);
   background: rgba(32, 212, 147, 0.055);
-
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.018);
 }
 
 .transaction-type.sell {
   color: var(--p-red);
   background: rgba(255, 93, 108, 0.055);
-
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.018);
 }
 
 .transaction-date {
   color: #555f6a;
-
   font-size: 6.5px;
 }
 
-/* ---------- FOOTER ---------- */
+/* =========================================================
+   FOOTER
+   ========================================================= */
 
 .portfolio-footer {
   display: flex;
@@ -1764,7 +2331,6 @@
   border-radius: 8px;
 
   color: var(--p-gold);
-
   background: rgba(245, 185, 27, 0.035);
 
   font-size: 8px;
@@ -1786,7 +2352,6 @@
   margin-top: 2px;
 
   color: #444e59;
-
   font-size: 5.5px;
 }
 
@@ -1800,7 +2365,9 @@
   font-size: 6.5px;
 }
 
-/* ---------- MODAL ---------- */
+/* =========================================================
+   HOLDING MODAL
+   ========================================================= */
 
 .portfolio-modal-backdrop {
   position: fixed;
@@ -1818,10 +2385,10 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 
-  animation: modalBackdropIn 0.2s ease;
+  animation: portfolioModalBackdrop 0.2s ease;
 }
 
-@keyframes modalBackdropIn {
+@keyframes portfolioModalBackdrop {
   from {
     opacity: 0;
   }
@@ -1857,10 +2424,11 @@
     0 40px 120px rgba(0, 0, 0, 0.65),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
 
-  animation: modalCardIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: portfolioModalCard 0.3s
+    cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes modalCardIn {
+@keyframes portfolioModalCard {
   from {
     opacity: 0;
     transform: translateY(15px) scale(0.97);
@@ -1883,12 +2451,13 @@
 
   height: 1px;
 
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(245, 185, 27, 0.35),
-    transparent
-  );
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(245, 185, 27, 0.35),
+      transparent
+    );
 }
 
 .portfolio-modal-top {
@@ -1986,7 +2555,6 @@
   display: block;
 
   color: #59636f;
-
   font-size: 6.5px;
 }
 
@@ -2004,7 +2572,9 @@
 
 .portfolio-modal-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+
+  grid-template-columns:
+    repeat(2, 1fr);
 
   border-top: 1px solid rgba(255, 255, 255, 0.045);
   border-bottom: 1px solid rgba(255, 255, 255, 0.045);
@@ -2028,7 +2598,6 @@
   display: block;
 
   color: #56606b;
-
   font-size: 6.5px;
 }
 
@@ -2046,6 +2615,7 @@
 .portfolio-modal-footer {
   display: flex;
   align-items: center;
+
   gap: 7px;
 
   padding: 15px 22px;
@@ -2055,7 +2625,341 @@
   font-size: 6.5px;
 }
 
-/* ---------- LOADING ---------- */
+/* =========================================================
+   TRADE MODAL
+   ========================================================= */
+
+.trade-modal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(0, 0, 0, 0.78);
+
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+.portfolio-trade-modal {
+  position: relative;
+
+  width: min(470px, 100%);
+
+  max-height: calc(100vh - 40px);
+
+  overflow-y: auto;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 19px;
+
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(245, 185, 27, 0.075),
+      transparent 32%
+    ),
+    #0b1016;
+
+  box-shadow:
+    0 40px 120px rgba(0, 0, 0, 0.68),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+
+  animation: tradeModalIn 0.28s
+    cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes tradeModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.trade-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 21px 22px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+.trade-modal-kicker {
+  color: var(--p-gold);
+
+  font-size: 6px;
+  font-weight: 900;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+}
+
+.trade-modal-header h2 {
+  margin: 5px 0 0;
+
+  color: #e8edf1;
+
+  font-size: 18px;
+  font-weight: 850;
+  letter-spacing: -0.4px;
+}
+
+.trade-stock-selector {
+  margin: 18px 22px;
+}
+
+.trade-stock-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 11px;
+
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.trade-stock-preview strong {
+  color: #dce2e7;
+
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.trade-stock-preview span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #56616c;
+
+  font-size: 6.5px;
+}
+
+.trade-current-price {
+  text-align: right;
+}
+
+.trade-current-price strong {
+  color: var(--p-green);
+
+  font-size: 13px;
+}
+
+.trade-form {
+  padding: 0 22px 22px;
+}
+
+.trade-form label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #626d78;
+
+  font-size: 6.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.trade-form input,
+.trade-form select {
+  width: 100%;
+  height: 41px;
+
+  box-sizing: border-box;
+
+  padding: 0 12px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 9px;
+
+  outline: none;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  color: #dfe5e9;
+
+  font-size: 9px;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.trade-form input:focus,
+.trade-form select:focus {
+  border-color: rgba(245, 185, 27, 0.3);
+
+  background: rgba(245, 185, 27, 0.018);
+
+  box-shadow:
+    0 0 0 3px rgba(245, 185, 27, 0.04);
+}
+
+.trade-available {
+  margin-top: 7px;
+
+  color: #4e5964;
+
+  font-size: 6px;
+}
+
+.trade-estimate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  margin-top: 15px;
+  padding: 12px;
+
+  border: 1px solid rgba(255, 255, 255, 0.045);
+  border-radius: 9px;
+
+  background: rgba(255, 255, 255, 0.012);
+
+  color: #56606b;
+
+  font-size: 7px;
+}
+
+.trade-estimate strong {
+  color: #d5dce1;
+
+  font-size: 10px;
+}
+
+.trade-error,
+.trade-success {
+  margin-top: 11px;
+
+  padding: 10px 11px;
+
+  border-radius: 8px;
+
+  font-size: 6.5px;
+  line-height: 1.5;
+}
+
+.trade-error {
+  border: 1px solid rgba(255, 93, 108, 0.1);
+
+  background: rgba(255, 93, 108, 0.035);
+
+  color: var(--p-red);
+}
+
+.trade-success {
+  border: 1px solid rgba(32, 212, 147, 0.1);
+
+  background: rgba(32, 212, 147, 0.035);
+
+  color: var(--p-green);
+}
+
+.trade-submit-button {
+  width: 100%;
+  height: 43px;
+
+  margin-top: 14px;
+
+  border: 1px solid transparent;
+  border-radius: 10px;
+
+  font-size: 8px;
+  font-weight: 850;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.trade-submit-button.buy {
+  border-color: rgba(32, 212, 147, 0.16);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(32, 212, 147, 0.13),
+      rgba(32, 212, 147, 0.045)
+    );
+
+  color: var(--p-green);
+}
+
+.trade-submit-button.sell {
+  border-color: rgba(255, 93, 108, 0.16);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 93, 108, 0.13),
+      rgba(255, 93, 108, 0.045)
+    );
+
+  color: var(--p-red);
+}
+
+.trade-submit-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.trade-submit-button.buy:hover:not(:disabled) {
+  box-shadow:
+    0 12px 30px rgba(32, 212, 147, 0.08);
+}
+
+.trade-submit-button.sell:hover:not(:disabled) {
+  box-shadow:
+    0 12px 30px rgba(255, 93, 108, 0.08);
+}
+
+.trade-submit-button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.trade-security-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  margin-top: 12px;
+
+  color: #424c57;
+
+  font-size: 5.8px;
+}
+
+/* =========================================================
+   GLOBAL LOADING
+   ========================================================= */
 
 .portfolio-loading,
 .portfolio-error-state {
@@ -2081,6 +2985,7 @@
 
   border: 1px solid rgba(245, 185, 27, 0.07);
   border-top-color: var(--p-gold);
+
   border-radius: 50%;
 
   box-shadow:
@@ -2100,7 +3005,6 @@
   border-radius: 50%;
 
   color: var(--p-gold);
-
   background: rgba(245, 185, 27, 0.045);
 }
 
@@ -2110,7 +3014,29 @@
   }
 }
 
-/* ---------- ERROR ---------- */
+.portfolio-loading-title {
+  margin: 0;
+
+  color: #dce1e6;
+
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.portfolio-loading-text {
+  max-width: 380px;
+
+  margin: 8px 0 0;
+
+  color: #59636e;
+
+  font-size: 8px;
+  line-height: 1.7;
+}
+
+/* =========================================================
+   ERROR
+   ========================================================= */
 
 .portfolio-error-icon {
   width: 52px;
@@ -2143,7 +3069,6 @@
   letter-spacing: 1.3px;
 }
 
-.portfolio-loading h2,
 .portfolio-error-state h2 {
   margin: 0;
 
@@ -2153,7 +3078,6 @@
   font-weight: 800;
 }
 
-.portfolio-loading p,
 .portfolio-error-state p {
   max-width: 380px;
 
@@ -2168,6 +3092,7 @@
 .portfolio-primary-action {
   display: inline-flex;
   align-items: center;
+
   gap: 8px;
 
   margin-top: 18px;
@@ -2192,11 +3117,12 @@
 
 .portfolio-primary-action:hover {
   transform: translateY(-1px);
+
   background: rgba(245, 185, 27, 0.08);
 }
 
 /* =========================================================
-   RESPONSIVE
+   RESPONSIVE — 1250
    ========================================================= */
 
 @media (max-width: 1250px) {
@@ -2206,25 +3132,26 @@
 
   .portfolio-summary-grid,
   .portfolio-insights-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
 
   .portfolio-main-grid {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns:
+      minmax(0, 1fr);
+  }
+
+  .portfolio-hero-stats {
+    grid-template-columns:
+      repeat(3, minmax(95px, 1fr));
   }
 }
 
-@media (max-width: 900px) {
-  .portfolio-main {
-    width: 100%;
-    margin-left: 0;
-    padding: 22px 18px 45px;
-  }
+/* =========================================================
+   RESPONSIVE — 1050
+   ========================================================= */
 
-  .portfolio-topbar-right {
-    display: none;
-  }
-
+@media (max-width: 1050px) {
   .portfolio-hero-content {
     align-items: flex-start;
     flex-direction: column;
@@ -2233,24 +3160,46 @@
   .portfolio-hero-stats {
     width: 100%;
   }
+}
 
-  .portfolio-hero-stat {
-    min-width: 0;
+/* =========================================================
+   RESPONSIVE — 900
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .portfolio-main {
+    width: 100%;
+
+    margin-left: 0;
+
+    padding: 22px 18px 45px;
+  }
+
+  .portfolio-topbar-right {
+    display: none;
+  }
+
+  .portfolio-performance-chart {
+    height: 290px;
+  }
+
+  .performance-chart {
+    height: 290px;
+  }
+
+  .performance-chart-value-labels {
+    display: none;
   }
 }
 
-@media (max-width: 650px) {
-  .portfolio-main {
-    padding: 18px 12px 35px;
-  }
+/* =========================================================
+   RESPONSIVE — 700
+   ========================================================= */
 
+@media (max-width: 700px) {
   .portfolio-header {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .portfolio-header h1 {
-    font-size: 30px;
   }
 
   .portfolio-refresh-premium {
@@ -2262,32 +3211,17 @@
     grid-template-columns: 1fr;
   }
 
-  .portfolio-hero-card {
-    padding: 21px;
-  }
-
-  .portfolio-hero-value {
-    font-size: 31px;
+  .performance-metrics {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
 
   .portfolio-hero-stats {
-    width: 100%;
-    grid-template-columns: 1fr;
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
   }
 
-  .portfolio-hero-stat {
-    min-width: 0;
-    padding: 12px 15px;
-  }
-
-  .portfolio-hero-footer {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .portfolio-section-heading,
-  .portfolio-panel-header {
+  .portfolio-section-heading {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -2301,8 +3235,97 @@
     flex: 1;
   }
 
-  .portfolio-performance-unavailable {
-    min-height: 260px;
+  .performance-chart-shell {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .performance-chart {
+    height: 270px;
+  }
+
+  .performance-chart-axis {
+    padding-right: 10px;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — 650
+   ========================================================= */
+
+@media (max-width: 650px) {
+  .portfolio-main {
+    padding: 18px 12px 35px;
+  }
+
+  .portfolio-header h1 {
+    font-size: 30px;
+  }
+
+  .portfolio-hero-card {
+    padding: 21px;
+  }
+
+  .portfolio-hero-value {
+    font-size: 31px;
+  }
+
+  .portfolio-hero-stats {
+    width: 100%;
+
+    grid-template-columns: 1fr;
+  }
+
+  .portfolio-hero-stat {
+    min-width: 0;
+
+    padding: 12px 15px;
+  }
+
+  .portfolio-hero-footer {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 8px;
+  }
+
+  .portfolio-section-heading,
+  .portfolio-panel-header {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .performance-metrics {
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+
+  .performance-chart-shell {
+    padding-top: 13px;
+  }
+
+  .performance-chart {
+    height: 250px;
+  }
+
+  .performance-chart-footer {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 7px;
+
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .performance-history-status {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .performance-unavailable-card {
+    min-height: 270px;
+
     padding: 18px;
   }
 
@@ -2330,6 +3353,10 @@
   }
 }
 
+/* =========================================================
+   RESPONSIVE — 430
+   ========================================================= */
+
 @media (max-width: 430px) {
   .portfolio-main {
     padding-left: 9px;
@@ -2343,17 +3370,66 @@
   .portfolio-hero-value {
     font-size: 28px;
   }
+
+  .performance-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .performance-metric {
+    padding: 11px;
+  }
+
+  .performance-metric strong {
+    font-size: 9px;
+  }
+
+  .performance-chart {
+    height: 230px;
+  }
+
+  .performance-chart-axis {
+    font-size: 5px;
+  }
+
+  .portfolio-section-heading {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .portfolio-period-switcher button {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .performance-chart-footer {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .trade-modal-layer,
+  .portfolio-modal-backdrop {
+    padding: 10px;
+  }
+
+  .portfolio-holding-modal,
+  .portfolio-trade-modal {
+    border-radius: 15px;
+  }
 }
 
-/* ---------- REDUCED MOTION ---------- */
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
   .portfolio-shell::after,
   .portfolio-bg-orb,
   .portfolio-hero-card::after,
   .portfolio-live-dot,
-  .performance-unavailable-icon,
-  .portfolio-loading-orbit {
+  .portfolio-refresh-icon.refreshing,
+  .portfolio-loading-orbit,
+  .performance-chart-line,
+  .performance-chart-loading-line {
     animation: none !important;
   }
 
@@ -2361,7 +3437,8 @@
   .portfolio-panel,
   .portfolio-refresh-premium,
   .portfolio-table-row,
-  .allocation-highlight {
+  .allocation-highlight,
+  .portfolio-insight-card {
     transition: none !important;
   }
 }

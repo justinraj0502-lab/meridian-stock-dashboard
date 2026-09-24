@@ -1857,3 +1857,23 @@
     transition: none !important;
   }
 }
+
+/* =========================================================
+   FORGOT PASSWORD LINK
+========================================================= */
+
+.auth-forgot-link {
+  color: #f5b91b;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition:
+    color 0.25s ease,
+    text-shadow 0.25s ease;
+}
+
+.auth-forgot-link:hover {
+  color: #ffd45c;
+  text-shadow: 0 0 14px rgba(245, 185, 27, 0.35);
+}

@@ -107,6 +107,29 @@ function formatCompactMoney(value) {
 }
 
 
+function formatVolume(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number) || number <= 0) {
+    return "0";
+  }
+
+  if (number >= 10000000) {
+    return `${(number / 10000000).toFixed(2)} Cr`;
+  }
+
+  if (number >= 100000) {
+    return `${(number / 100000).toFixed(2)} L`;
+  }
+
+  if (number >= 1000) {
+    return `${(number / 1000).toFixed(2)} K`;
+  }
+
+  return number.toLocaleString("en-IN");
+}
+
+
 function formatQuoteTime(value) {
   if (!value) {
     return "Unavailable";
@@ -198,6 +221,139 @@ function getMarketLabel(stocks) {
 
 
 /* =========================================
+   CUSTOM CHART TOOLTIP
+   ========================================= */
+
+function ChartTooltip({
+  active,
+  payload,
+  label,
+}) {
+  if (
+    !active ||
+    !payload ||
+    !payload.length
+  ) {
+    return null;
+  }
+
+  const item = payload[0]?.payload;
+
+  if (!item) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        background: "#0d141d",
+        border: "1px solid #293748",
+        borderRadius: "12px",
+        padding: "12px 14px",
+        boxShadow:
+          "0 12px 30px rgba(0,0,0,0.35)",
+        minWidth: "175px",
+      }}
+    >
+      <div
+        style={{
+          color: "#8b9bad",
+          fontSize: "11px",
+          marginBottom: "9px",
+          letterSpacing: "0.04em",
+        }}
+      >
+        {label}
+      </div>
+
+      <div
+        style={{
+          color: "#f2f4f7",
+          fontSize: "17px",
+          fontWeight: 700,
+          marginBottom: "10px",
+        }}
+      >
+        {formatPrice(item.close)}
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gap: "5px",
+          fontSize: "11px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: "20px",
+          }}
+        >
+          <span style={{ color: "#708298" }}>
+            Open
+          </span>
+
+          <strong style={{ color: "#cbd5e1" }}>
+            {formatPrice(item.open)}
+          </strong>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: "20px",
+          }}
+        >
+          <span style={{ color: "#708298" }}>
+            High
+          </span>
+
+          <strong style={{ color: "#20d493" }}>
+            {formatPrice(item.high)}
+          </strong>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: "20px",
+          }}
+        >
+          <span style={{ color: "#708298" }}>
+            Low
+          </span>
+
+          <strong style={{ color: "#f19a8e" }}>
+            {formatPrice(item.low)}
+          </strong>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: "20px",
+          }}
+        >
+          <span style={{ color: "#708298" }}>
+            Volume
+          </span>
+
+          <strong style={{ color: "#cbd5e1" }}>
+            {formatVolume(item.volume)}
+          </strong>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+/* =========================================
    DASHBOARD
    ========================================= */
 
@@ -233,6 +389,9 @@ function Dashboard() {
 
   const [chartRestricted, setChartRestricted] =
     useState(false);
+
+  const [chartSource, setChartSource] =
+    useState("");
 
   const [selectedSymbol, setSelectedSymbol] =
     useState("");
@@ -294,6 +453,16 @@ function Dashboard() {
       );
     }
 
+    if (interval === "1week") {
+      return parsed.toLocaleDateString(
+        "en-IN",
+        {
+          day: "2-digit",
+          month: "short",
+        }
+      );
+    }
+
     return parsed.toLocaleDateString(
       "en-IN",
       {
@@ -320,6 +489,7 @@ function Dashboard() {
       setChartLoading(true);
       setChartError("");
       setChartRestricted(false);
+      setChartSource("");
       setChartData([]);
 
       const data =
@@ -346,18 +516,30 @@ function Dashboard() {
         data.history
           .map((item) => ({
             ...item,
+
+            open: Number(item.open),
+            high: Number(item.high),
+            low: Number(item.low),
             close: Number(item.close),
+            volume: Number(item.volume) || 0,
+
             displayDate:
               formatChartDate(
                 item.date,
                 interval
               ),
           }))
-          .filter((item) =>
-            Number.isFinite(item.close)
+          .filter(
+            (item) =>
+              Number.isFinite(item.close)
           );
 
       setChartData(formatted);
+
+      setChartSource(
+        data.source ||
+          "Angel One SmartAPI"
+      );
     } catch (err) {
       console.error(
         "Chart error:",
@@ -536,6 +718,13 @@ function Dashboard() {
     await loadDashboard(false);
 
     setRefreshing(false);
+
+    if (selectedSymbol) {
+      await loadChartData(
+        selectedSymbol,
+        chartInterval
+      );
+    }
   };
 
 
@@ -669,6 +858,11 @@ function Dashboard() {
       alert(result.message);
 
       await loadDashboard(false);
+
+      await loadChartData(
+        selectedStock.symbol,
+        chartInterval
+      );
     } catch (err) {
       alert(
         err?.message ||
@@ -728,6 +922,11 @@ function Dashboard() {
       alert(result.message);
 
       await loadDashboard(false);
+
+      await loadChartData(
+        selectedStock.symbol,
+        chartInterval
+      );
     } catch (err) {
       alert(
         err?.message ||
@@ -1096,15 +1295,13 @@ function Dashboard() {
                       ) >= 0
                         ? "+"
                         : "-"}
+
                       {formatPrice(
                         Math.abs(
                           getChangeAmount(
                             selectedStock
                           )
                         )
-                      ).replace(
-                        "₹",
-                        "₹"
                       )}
 
                       {" ("}
@@ -1171,7 +1368,7 @@ function Dashboard() {
                       <div className="chart-spinner"></div>
 
                       <span>
-                        Loading market history...
+                        Loading Angel One market history...
                       </span>
                     </div>
                   )}
@@ -1193,10 +1390,9 @@ function Dashboard() {
                           </strong>
 
                           <span>
-                            {selectedSymbol} historical
-                            data isn't available
-                            on the current market-data
-                            provider plan.
+                            Historical candles are
+                            currently unavailable
+                            for {selectedSymbol}.
                           </span>
                         </div>
 
@@ -1274,30 +1470,9 @@ function Dashboard() {
                             />
 
                             <Tooltip
-                              contentStyle={{
-                                background:
-                                  "#0d141d",
-                                border:
-                                  "1px solid #293748",
-                                borderRadius:
-                                  "10px",
-                                color:
-                                  "#f2f4f7",
-                              }}
-                              labelStyle={{
-                                color:
-                                  "#708298",
-                                marginBottom:
-                                  "5px",
-                              }}
-                              formatter={(
-                                value
-                              ) => [
-                                formatPrice(
-                                  value
-                                ),
-                                "Close",
-                              ]}
+                              content={
+                                <ChartTooltip />
+                              }
                             />
 
                             <Line
@@ -1309,6 +1484,12 @@ function Dashboard() {
                               activeDot={{
                                 r: 5,
                               }}
+                              isAnimationActive={
+                                true
+                              }
+                              animationDuration={
+                                500
+                              }
                             />
 
                           </LineChart>
@@ -1332,14 +1513,53 @@ function Dashboard() {
                         </strong>
 
                         <span>
-                          The selected provider does
-                          not currently return chart
-                          history for this symbol.
+                          Angel One currently has
+                          no historical candles
+                          available for this
+                          symbol and range.
                         </span>
                       </div>
                     )}
 
                 </div>
+
+
+                {/* =================================
+                    CHART DATA SOURCE
+                    ================================= */}
+
+                {!chartLoading &&
+                  !chartError &&
+                  !chartRestricted &&
+                  chartData.length > 0 && (
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent:
+                          "space-between",
+                        alignItems: "center",
+                        gap: "12px",
+                        marginTop: "8px",
+                        padding:
+                          "0 2px",
+                        color:
+                          "#708298",
+                        fontSize:
+                          "10px",
+                      }}
+                    >
+                      <span>
+                        {chartData.length} historical
+                        candles
+                      </span>
+
+                      <span>
+                        Source:{" "}
+                        {chartSource ||
+                          "Angel One SmartAPI"}
+                      </span>
+                    </div>
+                  )}
 
 
                 {/* =================================
@@ -1686,6 +1906,7 @@ function Dashboard() {
                             2
                           )}
                           %
+
                         </span>
 
                       </div>

@@ -1,18 +1,24 @@
-const API_BASE_URL = "https://meridian-stock-backend.onrender.com/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV
+    ? "http://localhost:5000/api"
+    : "https://meridian-stock-backend.onrender.com/api");
 
-/* =========================================================
-   AUTH STORAGE
-========================================================= */
+// ============================================================
+// AUTH STORAGE
+// ============================================================
 
 export const getToken = () => {
-  return localStorage.getItem("token");
+  return localStorage.getItem("meridian-token");
 };
 
 export const getCurrentUser = () => {
   try {
-    const user = localStorage.getItem("user");
+    const user = localStorage.getItem("meridian-user");
+
     return user ? JSON.parse(user) : null;
-  } catch {
+  } catch (error) {
+    console.error("Failed to read current user:", error);
     return null;
   }
 };
@@ -21,21 +27,64 @@ export const isAuthenticated = () => {
   return Boolean(getToken());
 };
 
-export const logout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
+export const setAuthData = (
+  token,
+  user
+) => {
+  if (token) {
+    localStorage.setItem(
+      "meridian-token",
+      token
+    );
+  }
 
-  window.dispatchEvent(
-    new Event("meridian-auth-change")
-  );
+  if (user) {
+    localStorage.setItem(
+      "meridian-user",
+      JSON.stringify(user)
+    );
+  }
 };
 
+export const clearAuthData = () => {
+  localStorage.removeItem("meridian-token");
+  localStorage.removeItem("meridian-user");
 
-/* =========================================================
-   RESPONSE HANDLER
-========================================================= */
+  // Older auth keys
+  localStorage.removeItem("adminToken");
+  localStorage.removeItem("adminUser");
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+};
 
-const parseResponse = async (response) => {
+export const logout = () => {
+  clearAuthData();
+};
+
+// ============================================================
+// GENERIC REQUEST
+// ============================================================
+
+const request = async (endpoint, options = {}) => {
+  const token = getToken();
+
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}${endpoint}`,
+    {
+      ...options,
+      headers,
+    }
+  );
+
   let data = null;
 
   try {
@@ -45,38 +94,15 @@ const parseResponse = async (response) => {
   }
 
   if (!response.ok) {
-    const message =
+    const error = new Error(
       data?.message ||
-      data?.error ||
-      `Request failed with status ${response.status}`;
+        data?.error ||
+        `Request failed with status ${response.status}`
+    );
 
-    /*
-      IMPORTANT:
-      Do not automatically logout for every 401 during
-      authentication requests. A wrong login password,
-      for example, should not clear an existing session.
-    */
-    if (
-      response.status === 401 &&
-      !response.url.includes("/auth/")
-    ) {
-      logout();
-    }
-
-    const error = new Error(message);
-
-    /*
-      Preserve useful backend information so the frontend
-      can react to OTP states such as cooldown and
-      verification requirements.
-    */
     error.status = response.status;
     error.code = data?.code;
-    error.requiresVerification =
-      data?.requiresVerification || false;
-    error.requiresOtp =
-      data?.requiresOtp || false;
-    error.email = data?.email || null;
+    error.data = data;
 
     throw error;
   }
@@ -84,70 +110,15 @@ const parseResponse = async (response) => {
   return data;
 };
 
+// ============================================================
+// REGISTER
+// ============================================================
 
-/* =========================================================
-   GENERIC REQUEST
-========================================================= */
-
-const request = async (
-  endpoint,
-  options = {}
-) => {
-  const token = getToken();
-
-  const headers = {
-    "Content-Type": "application/json",
-    ...(options.headers || {}),
-  };
-
-  /*
-    Send JWT only when one actually exists.
-  */
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  let response;
-
-  try {
-    response = await fetch(
-      `${API_BASE_URL}${endpoint}`,
-      {
-        ...options,
-        headers,
-      }
-    );
-  } catch (error) {
-    const networkError = new Error(
-      "Unable to connect to Meridian server. Please make sure the backend is running."
-    );
-
-    networkError.code = "NETWORK_ERROR";
-
-    throw networkError;
-  }
-
-  return parseResponse(response);
-};
-
-
-/* =========================================================
-   AUTH — REGISTER
-========================================================= */
-
-/*
-  Step 1:
-  Create/update the account and request registration OTP.
-
-  The backend intentionally does NOT return a JWT here.
-  The JWT is issued only after OTP verification.
-*/
-
-export const register = async (
+export const registerUser = async ({
   name,
   email,
-  password
-) => {
+  password,
+}) => {
   return request("/auth/register", {
     method: "POST",
     body: JSON.stringify({
@@ -158,67 +129,33 @@ export const register = async (
   });
 };
 
+// Compatibility name
+export const register = registerUser;
 
-/* =========================================================
-   AUTH — VERIFY REGISTRATION OTP
-========================================================= */
+// ============================================================
+// REGISTRATION OTP
+// ============================================================
 
-/*
-  Step 2:
-  Verify the registration OTP.
-
-  Successful verification returns:
-    token
-    user
-*/
-
-export const verifyRegistrationOtp = async (
+export const verifyRegistrationOtp = async ({
   email,
-  otp
-) => {
-  const data = await request(
-    "/auth/register/verify",
-    {
-      method: "POST",
-      body: JSON.stringify({
-        email,
-        otp,
-      }),
-    }
-  );
-
-  if (data?.token) {
-    localStorage.setItem(
-      "token",
-      data.token
-    );
-  }
-
-  if (data?.user) {
-    localStorage.setItem(
-      "user",
-      JSON.stringify(data.user)
-    );
-  }
-
-  window.dispatchEvent(
-    new Event("meridian-auth-change")
-  );
-
-  return data;
+  otp,
+}) => {
+  return request("/auth/register/verify", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      otp,
+    }),
+  });
 };
 
+// Compatibility name
+export const verifyRegisterOtp =
+  verifyRegistrationOtp;
 
-/* =========================================================
-   AUTH — LOGIN
-========================================================= */
-
-/*
-  Step 1:
-  Validate email/password and request login OTP.
-
-  The backend intentionally does NOT return a JWT here.
-*/
+// ============================================================
+// LOGIN
+// ============================================================
 
 export const login = async (
   email,
@@ -233,25 +170,23 @@ export const login = async (
   });
 };
 
+// Keep the newer name available too
+export const loginUser = async ({
+  email,
+  password,
+}) => {
+  return login(email, password);
+};
 
-/* =========================================================
-   AUTH — VERIFY LOGIN OTP
-========================================================= */
-
-/*
-  Step 2:
-  Verify login OTP.
-
-  Successful verification returns:
-    token
-    user
-*/
+// ============================================================
+// LOGIN OTP
+// ============================================================
 
 export const verifyLoginOtp = async (
   email,
   otp
 ) => {
-  const data = await request(
+  const response = await request(
     "/auth/login/verify",
     {
       method: "POST",
@@ -262,35 +197,77 @@ export const verifyLoginOtp = async (
     }
   );
 
-  if (data?.token) {
-    localStorage.setItem(
-      "token",
-      data.token
+  // Save authentication immediately after
+  // successful OTP verification
+  if (response?.token) {
+    setAuthData(
+      response.token,
+      response.user
     );
   }
 
-  if (data?.user) {
-    localStorage.setItem(
-      "user",
-      JSON.stringify(data.user)
-    );
-  }
-
-  window.dispatchEvent(
-    new Event("meridian-auth-change")
-  );
-
-  return data;
+  return response;
 };
 
+export const verifyOtp = verifyLoginOtp;
 
-/* =========================================================
-   AUTH — RESEND OTP
-========================================================= */
+// ============================================================
+// FORGOT PASSWORD
+// ============================================================
+
+export const forgotPassword = async ({
+  email,
+}) => {
+  return request("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+    }),
+  });
+};
+
+export const verifyForgotPasswordOtp =
+  async ({
+    email,
+    otp,
+  }) => {
+    return request(
+      "/auth/forgot-password/verify",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+          otp,
+        }),
+      }
+    );
+  };
+
+export const resetPassword = async ({
+  email,
+  otp,
+  newPassword,
+}) => {
+  return request(
+    "/auth/forgot-password/reset",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        email,
+        otp,
+        newPassword,
+      }),
+    }
+  );
+};
+
+// ============================================================
+// RESEND OTP
+// ============================================================
 
 export const resendOtp = async (
   email,
-  purpose
+  purpose = "login"
 ) => {
   return request("/auth/otp/resend", {
     method: "POST",
@@ -301,38 +278,19 @@ export const resendOtp = async (
   });
 };
 
-
-/* =========================================================
-   STOCKS
-========================================================= */
+// ============================================================
+// STOCKS
+// ============================================================
 
 export const getStocks = async () => {
-  const data = await request("/stocks");
-
-  if (Array.isArray(data)) {
-    return data;
-  }
-
-  if (Array.isArray(data?.stocks)) {
-    return data.stocks;
-  }
-
-  if (Array.isArray(data?.data)) {
-    return data.data;
-  }
-
-  return [];
+  return request("/stocks");
 };
 
-
-export const getStock = async (
-  symbol
-) => {
+export const getStock = async (symbol) => {
   return request(
     `/stocks/${encodeURIComponent(symbol)}`
   );
 };
-
 
 export const getStockHistory = async (
   symbol,
@@ -347,116 +305,110 @@ export const getStockHistory = async (
   );
 };
 
-
-/* =========================================================
-   PORTFOLIO
-========================================================= */
+// ============================================================
+// PORTFOLIO
+// ============================================================
 
 export const getPortfolio = async () => {
   return request("/portfolio");
 };
 
+export const getPortfolioHistory = async (
+  interval = "3M"
+) => {
+  return request(
+    `/portfolio/history?interval=${encodeURIComponent(
+      interval
+    )}`
+  );
+};
+
+export const buyStock = async ({
+  symbol,
+  quantity,
+}) => {
+  return request("/portfolio/buy", {
+    method: "POST",
+    body: JSON.stringify({
+      symbol,
+      quantity,
+    }),
+  });
+};
+
+export const sellStock = async ({
+  symbol,
+  quantity,
+}) => {
+  return request("/portfolio/sell", {
+    method: "POST",
+    body: JSON.stringify({
+      symbol,
+      quantity,
+    }),
+  });
+};
 
 export const getTransactions = async () => {
-  const data = await request(
-    "/portfolio/transactions"
-  );
-
-  if (Array.isArray(data)) {
-    return data;
-  }
-
-  if (
-    Array.isArray(
-      data?.transactions
-    )
-  ) {
-    return data.transactions;
-  }
-
-  if (Array.isArray(data?.data)) {
-    return data.data;
-  }
-
-  return [];
+  return request("/portfolio/transactions");
 };
 
+// ============================================================
+// ALERTS
+// ============================================================
 
-/* =========================================================
-   BUY / SELL
-========================================================= */
+export const getAlerts = async () => {
+  return request("/alerts");
+};
 
-export const buyStock = async (
+export const createAlert = async ({
   symbol,
-  quantity,
-  price
+  type,
+  target,
+}) => {
+  return request("/alerts", {
+    method: "POST",
+    body: JSON.stringify({
+      symbol,
+      type,
+      target,
+    }),
+  });
+};
+
+export const refreshAlerts = async () => {
+  return request("/alerts/refresh", {
+    method: "POST",
+  });
+};
+
+export const deleteAlert = async (
+  alertId
 ) => {
   return request(
-    "/portfolio/buy",
+    `/alerts/${encodeURIComponent(alertId)}`,
     {
-      method: "POST",
-      body: JSON.stringify({
-        symbol,
-        quantity,
-        price,
-      }),
+      method: "DELETE",
     }
   );
 };
 
-
-export const sellStock = async (
-  symbol,
-  quantity,
-  price
-) => {
-  return request(
-    "/portfolio/sell",
-    {
-      method: "POST",
-      body: JSON.stringify({
-        symbol,
-        quantity,
-        price,
-      }),
-    }
-  );
-};
-
-
-/* =========================================================
-   DEBUG HELPER
-========================================================= */
+// ============================================================
+// DEBUG
+// ============================================================
 
 export const debugAuth = () => {
   const token = getToken();
   const user = getCurrentUser();
 
-  console.log(
-    "========== MERIDIAN AUTH =========="
-  );
+  return {
+    authenticated: Boolean(token),
+    hasToken: Boolean(token),
+    user,
+    apiBaseUrl: API_BASE_URL,
+  };
+};
 
-  console.log(
-    "Token exists:",
-    Boolean(token)
-  );
-
-  console.log(
-    "Token preview:",
-    token
-      ? `${token.substring(
-          0,
-          20
-        )}...`
-      : "NO TOKEN"
-  );
-
-  console.log(
-    "User:",
-    user
-  );
-
-  console.log(
-    "==================================="
-  );
+export const getApiBaseUrl = () => {
+  return API_BASE_URL;
 };
