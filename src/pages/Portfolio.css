@@ -3442,3 +3442,534 @@
     transition: none !important;
   }
 }
+
+/* =========================================================
+   MERIDIAN PORTFOLIO — FINAL CLEAN RESPONSIVE PATCH
+   Matches Sidebar / Screener / Alerts / Learn
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   DESKTOP ALIGNMENT
+   --------------------------------------------------------- */
+
+.portfolio-main {
+  width: calc(100% - 270px);
+  margin-left: 270px;
+  padding: 30px 34px 60px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* Keep the content from becoming excessively wide */
+.portfolio-main > * {
+  max-width: 1480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Cleaner vertical rhythm */
+.portfolio-topbar {
+  margin-bottom: 24px;
+}
+
+.portfolio-header {
+  margin-bottom: 24px;
+}
+
+.portfolio-hero-card {
+  margin-bottom: 20px;
+}
+
+.portfolio-summary-grid {
+  margin-bottom: 20px;
+}
+
+.portfolio-insights-grid {
+  margin-bottom: 20px;
+}
+
+.portfolio-performance-panel {
+  margin-bottom: 20px;
+}
+
+/* ---------------------------------------------------------
+   CLEANER PANELS
+   --------------------------------------------------------- */
+
+.portfolio-panel,
+.portfolio-performance-panel,
+.portfolio-hero-card,
+.portfolio-summary-card,
+.portfolio-insight-card {
+  box-sizing: border-box;
+}
+
+.portfolio-panel {
+  overflow: hidden;
+}
+
+.portfolio-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.portfolio-table {
+  min-width: 720px;
+}
+
+/* Prevent long stock names / values from breaking layout */
+.portfolio-stock-cell,
+.portfolio-stock-cell > div:last-child {
+  min-width: 0;
+}
+
+.portfolio-stock-cell strong,
+.portfolio-stock-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------
+   TABLET
+   --------------------------------------------------------- */
+
+@media (max-width: 1250px) {
+  .portfolio-main {
+    width: calc(100% - 270px);
+    margin-left: 270px;
+    padding: 26px 24px 50px;
+  }
+
+  .portfolio-summary-grid,
+  .portfolio-insights-grid {
+    gap: 14px;
+  }
+
+  .portfolio-main-grid {
+    gap: 18px;
+  }
+}
+
+/* ---------------------------------------------------------
+   TABLET / COLLAPSED SIDEBAR
+   --------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .portfolio-main {
+    width: 100%;
+    margin-left: 0;
+    padding: 24px 18px 45px;
+  }
+
+  .portfolio-topbar {
+    margin-bottom: 20px;
+  }
+
+  .portfolio-header {
+    gap: 16px;
+  }
+
+  .portfolio-header > div {
+    min-width: 0;
+  }
+
+  .portfolio-header h1 {
+    line-height: 1.05;
+  }
+
+  .portfolio-header p {
+    max-width: 650px;
+  }
+
+  .portfolio-hero-content {
+    gap: 22px;
+  }
+
+  .portfolio-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portfolio-insights-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portfolio-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .portfolio-performance-panel,
+  .portfolio-panel {
+    width: 100%;
+  }
+
+  .performance-chart {
+    height: 280px;
+  }
+}
+
+/* ---------------------------------------------------------
+   MOBILE
+   --------------------------------------------------------- */
+
+@media (max-width: 700px) {
+  .portfolio-main {
+    padding: 18px 14px 34px;
+  }
+
+  .portfolio-topbar {
+    min-height: auto;
+    margin-bottom: 18px;
+  }
+
+  .portfolio-breadcrumb {
+    font-size: 8px;
+  }
+
+  .portfolio-live-status {
+    font-size: 8px;
+  }
+
+  .portfolio-header {
+    margin-bottom: 18px;
+  }
+
+  .portfolio-header h1 {
+    font-size: 30px;
+  }
+
+  .portfolio-header p {
+    font-size: 12px;
+    line-height: 1.7;
+    max-width: 100%;
+  }
+
+  .portfolio-refresh-premium {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Hero */
+  .portfolio-hero-card {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .portfolio-hero-content {
+    gap: 18px;
+  }
+
+  .portfolio-hero-value {
+    font-size: 30px;
+    line-height: 1.1;
+  }
+
+  .portfolio-hero-change {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .portfolio-hero-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .portfolio-hero-stat {
+    min-width: 0;
+    padding: 12px;
+  }
+
+  .portfolio-hero-footer {
+    gap: 8px;
+  }
+
+  /* Summary */
+  .portfolio-summary-grid,
+  .portfolio-insights-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .portfolio-summary-card,
+  .portfolio-insight-card {
+    min-width: 0;
+  }
+
+  /* Performance */
+  .portfolio-performance-panel,
+  .portfolio-panel {
+    border-radius: 15px;
+  }
+
+  .portfolio-section-heading,
+  .portfolio-panel-header {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .performance-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .performance-metric {
+    min-width: 0;
+    padding: 12px;
+  }
+
+  .performance-metric strong {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .portfolio-period-switcher {
+    width: 100%;
+  }
+
+  .portfolio-period-switcher button {
+    flex: 1;
+  }
+
+  .performance-chart-shell {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .performance-chart {
+    height: 235px;
+  }
+
+  /* Holdings */
+  .portfolio-table-wrap {
+    border-radius: 0 0 15px 15px;
+  }
+
+  .portfolio-table {
+    min-width: 690px;
+  }
+
+  /* Allocation */
+  .allocation-list {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* Transactions */
+  .transaction-summary {
+    gap: 8px;
+  }
+
+  /* Footer */
+  .portfolio-footer {
+    gap: 8px;
+    margin-top: 20px;
+  }
+}
+
+/* ---------------------------------------------------------
+   SMALL MOBILE
+   --------------------------------------------------------- */
+
+@media (max-width: 480px) {
+  .portfolio-main {
+    padding: 15px 10px 28px;
+  }
+
+  .portfolio-header h1 {
+    font-size: 27px;
+  }
+
+  .portfolio-header p {
+    font-size: 11px;
+  }
+
+  .portfolio-hero-card {
+    padding: 17px;
+  }
+
+  .portfolio-hero-value {
+    font-size: 27px;
+  }
+
+  .portfolio-hero-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .portfolio-hero-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .portfolio-hero-stat strong {
+    text-align: right;
+  }
+
+  .performance-metrics {
+    grid-template-columns: 1fr 1fr;
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+
+  .performance-metric {
+    padding: 10px;
+  }
+
+  .performance-metric span {
+    font-size: 7px;
+  }
+
+  .performance-metric strong {
+    font-size: 11px;
+  }
+
+  .performance-metric small {
+    font-size: 8px;
+  }
+
+  .performance-chart {
+    height: 210px;
+  }
+
+  .portfolio-section-heading,
+  .portfolio-panel-header {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .portfolio-panel-header {
+    gap: 10px;
+  }
+
+  .portfolio-panel-header h2,
+  .portfolio-section-heading h2 {
+    font-size: 17px;
+  }
+
+  .portfolio-panel-count {
+    font-size: 8px;
+  }
+
+  .transaction-summary {
+    font-size: 8px;
+  }
+
+  /* Modal */
+  .portfolio-modal-backdrop {
+    padding: 10px;
+  }
+
+  .portfolio-holding-modal,
+  .portfolio-trade-modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100vh - 20px);
+    overflow-y: auto;
+    border-radius: 15px;
+  }
+
+  .trade-stock-preview {
+    grid-template-columns: auto 1fr;
+  }
+
+  .trade-current-price {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+
+  .portfolio-trade-actions {
+    flex-direction: column;
+  }
+
+  .portfolio-buy-button,
+  .portfolio-sell-button {
+    width: 100%;
+  }
+}
+
+/* ---------------------------------------------------------
+   VERY SMALL PHONES
+   --------------------------------------------------------- */
+
+@media (max-width: 360px) {
+  .portfolio-main {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .portfolio-header h1 {
+    font-size: 25px;
+  }
+
+  .portfolio-hero-value {
+    font-size: 24px;
+  }
+
+  .performance-metrics {
+    gap: 6px;
+  }
+
+  .performance-metric {
+    padding: 9px;
+  }
+
+  .performance-metric strong {
+    font-size: 10px;
+  }
+}
+
+/* ---------------------------------------------------------
+   MOBILE SAFETY
+   --------------------------------------------------------- */
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.portfolio-shell {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.portfolio-main,
+.portfolio-panel,
+.portfolio-performance-panel,
+.portfolio-hero-card {
+  max-width: 100%;
+}
+
+.portfolio-table-wrap::-webkit-scrollbar {
+  height: 5px;
+}
+
+.portfolio-table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.portfolio-table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+/* ---------------------------------------------------------
+   REDUCED MOTION
+   --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-summary-card,
+  .portfolio-insight-card,
+  .portfolio-panel,
+  .portfolio-table-row,
+  .portfolio-refresh-premium {
+    transition: none !important;
+  }
+}
